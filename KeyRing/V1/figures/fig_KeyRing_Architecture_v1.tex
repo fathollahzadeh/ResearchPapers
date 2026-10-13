@@ -75,22 +75,27 @@
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % (1) Column Profiler
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    \node[panel, minimum width=100pt] (prof) at (95pt, 0pt) {};
+    \node[panel, minimum width=86pt] (prof) at (75pt, 0pt) {};
     \node[paneltitle, above=of prof.north] (tprof) {\textcircled{\scriptsize 1} Column Profiler};
 
     % each profile part: tight box, icon on the left, text centered in the remaining space
     \foreach \n/\y/\ico/\txt in {
-        sk/36pt/\faHashtag/{\textbf{Value Sketches}\\[-1pt]MinHash, HLL},
-        uq/12pt/\faFingerprint/{\textbf{Uniqueness, Type,}\\[-1pt]\textbf{Value Pattern}},
-        fmt/-12pt/\faBroom/{\textbf{Format}\\[-1pt]\textbf{Normalization}},
-        emb/-36pt/\faVectorSquare/{\textbf{Name + Description}\\[-1pt]\textbf{Embedding}}} {
-        \node[comp, minimum width=88pt, minimum height=16pt, inner sep=0pt] (\n) at (95pt, \y) {};
+        sk/36pt/{}/{\textbf{Value Sketches}\\[-1pt]MinHash, HLL},
+        uq/12pt/\faIdCard/{\textbf{Uniqueness, Type,}\\[-1pt]\textbf{Value Pattern}},
+        fmt/-12pt/{}/{\textbf{Format}\\[-1pt]\textbf{Normalization}},
+        emb/-36pt/{}/{\textbf{Name + Description}\\[-1pt]\textbf{Embedding}}} {
+        \node[comp, minimum width=74pt, minimum height=16pt, inner sep=0pt] (\n) at (75pt, \y) {};
         \node[icontile] at ($(\n.west)+(8pt,0pt)$) {\ico};
-        \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(\n.center)+(6pt,0pt)$) {\txt};
+        \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(\n.center)+(7pt,0pt)$) {\txt};
     }
+    \pic[scale=1.2] at ($(sk.west)+(8.5pt,0pt)$) {valuesketch=uwsci};
+    \pic[scale=1.2] at ($(fmt.west)+(8.5pt,0pt)$) {formatnorm=uwsci};
+    \pic[scale=1.2] at ($(emb.west)+(8pt,0pt)$) {colembed=uwsci};
 
 
 
+    % stages 2, 3 and the output, shifted left by the 27pt the narrower profiler saves
+    \begin{scope}[xshift=-27pt]
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % (2) Ring Builder
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,6 +162,8 @@
     }
     \node[font=\scriptsize] at ($(out)+(0pt,-32pt)$) {$G(\mathcal{R})$};
     \node[font=\tiny, align=center, text=uwgreyC] at ($(out)+(0pt,34pt)$) {star per\\[-1pt]key domain};
+
+    \end{scope}
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Connections between components: only between the panel titles

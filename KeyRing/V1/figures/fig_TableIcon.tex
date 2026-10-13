@@ -56,4 +56,79 @@
         }
     },
     pics/dbxcatalog/.default=argray,
+    %
+    % valuesketch: many values compressed into a small fixed-size sketch of registers (11pt x 7.2pt)
+    pics/valuesketch/.style={
+        code={
+            % column values
+            \foreach \x in {0, 1, 2} {
+                \foreach \y in {-1, 0, 1} {
+                    \fill[#1!55] (-5pt+\x*1.9pt,\y*2.2pt) circle (0.6pt);
+                }
+            }
+            % compress
+            \draw[#1, line width=0.7pt, line cap=round, line join=round] (0pt,1.3pt) -- (1.2pt,0pt) -- (0pt,-1.3pt);
+            % sketch registers
+            \fill[#1, rounded corners=0.6pt] (2.2pt,-3.6pt) rectangle (5.6pt,3.6pt);
+            \foreach \y/\w in {2pt/2pt, 0pt/1.1pt, -2pt/1.6pt} {
+                \draw[white, line width=0.5pt] (2.8pt,\y) -- (2.8pt+\w,\y);
+            }
+        }
+    },
+    pics/valuesketch/.default=argray,
+    %
+    % formatnorm: raw values lose their prefix or leading zeros at the cut and normalize to one canonical core (10.4pt x 7.6pt)
+    pics/formatnorm/.style={
+        code={
+            % removable parts: a prefix (PRJ-) and leading zeros (00)
+            \fill[#1!40, rounded corners=0.3pt] (-5.2pt,2pt) rectangle (-3pt,3.2pt);
+            \fill[#1!40] (-4.6pt,0pt) circle (0.55pt);
+            \fill[#1!40] (-3.4pt,0pt) circle (0.55pt);
+            % cores
+            \foreach \y in {2.6pt, 0pt, -2.6pt} {
+                \fill[#1, rounded corners=0.3pt] (-2.2pt,\y-0.6pt) rectangle (0.2pt,\y+0.6pt);
+            }
+            % normalization cut
+            \draw[#1, line width=0.35pt, densely dashed] (-2.6pt,-3.8pt) -- (-2.6pt,3.8pt);
+            % canonical value
+            \draw[#1, line width=0.45pt, line cap=round, line join=round] (1.2pt,1pt) -- (2.1pt,0pt) -- (1.2pt,-1pt);
+            \fill[#1, rounded corners=0.4pt] (2.8pt,-1.2pt) rectangle (5.2pt,1.2pt);
+        }
+    },
+    pics/formatnorm/.default=argray,
+    %
+    % tablevector: embeddings, after the TableVectorIcon of the Databricks DuBois design system (ISC):
+    % a table whose bottom-right corner holds vectors joined to a hub (8.4pt x 8.4pt)
+    pics/tablevector/.style={
+        code={
+            \begin{scope}[x=0.6pt, y=-0.6pt, shift={(-8,-8)}]
+                % table with the bottom-right corner cut out
+                \fill[#1, even odd rule]
+                    [rounded corners=0.45pt] (1,1) -- (15,1) -- (15,9) [sharp corners] -- (13.5,9) -- (13.5,7) -- (6.5,7) -- (6.5,13.5) -- (8,13.5) [rounded corners=0.45pt] -- (8,15) -- (1,15) -- cycle
+                    [sharp corners] (2.5,7) rectangle (5,13.5)
+                    (2.5,2.5) rectangle (13.5,5.5);
+                % vectors joined to a hub
+                \draw[#1, line width=0.4pt] (13.5,13.5) -- (12,12) -- (12.5,9.5) (12,12) -- (9.5,12.5) (10,10) -- (12,12);
+                \fill[#1] (12,12) circle (1) (12.5,9.5) circle (0.5) (9.5,12.5) circle (0.5) (13.75,13.75) circle (0.75) (9.75,9.75) circle (0.75);
+            \end{scope}
+        }
+    },
+    pics/tablevector/.default=argray,
+    %
+    % colembed: one card holding the column text (strong line, embedded first), the table text
+    % (light line, embedded second) and their embedding, vectors joined to a hub as in tablevector (10.4pt x 8pt)
+    pics/colembed/.style={
+        code={
+            \draw[#1, line width=0.5pt, rounded corners=1pt] (-5.2pt,-4pt) rectangle (5.2pt,4pt);
+            % column name and description, then table name and description
+            \fill[#1, rounded corners=0.3pt] (-3.8pt,1pt) rectangle (-0.6pt,2.2pt);
+            \fill[#1!45, rounded corners=0.3pt] (-3.8pt,-2.2pt) rectangle (-1.4pt,-1pt);
+            % vectors joined to a hub
+            \begin{scope}[shift={(2.2pt,0pt)}, scale=0.85]
+                \draw[#1, line width=0.4pt] (1.37pt,-1.37pt) -- (0,0) -- (0.39pt,1.95pt) (0,0) -- (-1.95pt,-0.39pt) (-1.56pt,1.56pt) -- (0,0);
+                \fill[#1] (0,0) circle (0.78pt) (0.39pt,1.95pt) circle (0.39pt) (-1.95pt,-0.39pt) circle (0.39pt) (1.37pt,-1.37pt) circle (0.59pt) (-1.76pt,1.76pt) circle (0.59pt);
+            \end{scope}
+        }
+    },
+    pics/colembed/.default=argray,
 }
