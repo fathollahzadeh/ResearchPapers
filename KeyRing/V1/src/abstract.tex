@@ -1,0 +1,19 @@
+\begin{abstract}
+% 1. State the problem
+Analytics, BI, and LLM agents over enterprise data first need a join graph: which tables join, on which keys, and in which direction.
+Enterprise databases with hundreds to tens of thousands of tables rarely declare these keys.
+% 2. Say why it's an interesting problem
+Non-LLM methods, such as inclusion-dependency discovery, learned foreign-key detectors, and joinable-table search, are cheap but decide joins from value overlap and names alone.
+They accept accidental overlaps of surrogate IDs, codes, and dates, and they miss true joins whose values are only partially contained or formatted differently.
+LLM-based methods add the semantics these methods lack, but current practice sends every pair of tables to the LLM: about 50M calls for 10K tables, and almost all of them return ``no join''.
+Hybrid methods cluster tables by topic or route each pair through a cheap proxy before the LLM, but topics are not key domains, proxies inherit the failures of non-LLM signals, and every pair is still judged independently.
+% 3. Say what your solution achieves
+We present \ourmethod, a hybrid system that discovers join keys with LLM calls proportional to the number of \emph{key domains}, not the number of table pairs.
+\ourmethod builds on the observation that enterprise joins concentrate on a few key domains, such as customer or project identifiers, that many tables share.
+\ourmethod uses non-LLM signals for what they do well: it profiles every column once, generates candidates with indexes, and groups candidate key columns into \emph{rings}, one per key domain.
+It uses the LLM for what only the LLM does well: it verifies the semantics of each ring once, together with a few uncertain candidates.
+A cost-based optimizer routes each candidate to a local model distilled from earlier LLM decisions or to the LLM, so that \ourmethod keeps a target recall of the all-pairs LLM baseline with a user-given confidence.
+Joins follow from ring membership, so the resulting graph is a star around each key owner instead of a clique of redundant edges.
+% 4. Say what follows from your solution
+On \todo{N} enterprise databases with up to \todo{10K} tables and on public benchmarks, \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$ and tokens by \todo{Y}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins.
+\end{abstract}

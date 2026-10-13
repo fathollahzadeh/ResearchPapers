@@ -1,0 +1,97 @@
+% \usepackage{fontspec}
+% \setmonofont{JetBrains Mono}
+
+\usepackage{pgfplots}
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
+\usepackage{listings}
+\usetikzlibrary{arrows.meta, chains, positioning, shapes.symbols}
+\usetikzlibrary{decorations,calligraphy}
+\usepackage{numprint}
+\usepackage{subfigure}
+\usepackage{mathtools}
+\usepackage{amsmath,mleftright}
+\usepackage{multirow}
+\usepackage{pifont}
+\usepackage{colortbl}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newcommand{\eat}[1]{}
+% \usepackage{enumitem}
+\usepackage{balance}
+\usepackage{marginnote}
+\usepackage{soul}
+
+\newtheorem{definex}{Definition}
+\npstyleenglish
+
+\def\shorten{\looseness=-1} 
+\newcommand{\chline}{\arrayrulecolor{lightgray} \hline \arrayrulecolor{black}}
+\definecolor{commentgreen}{RGB}{106,168,79}
+
+
+% algorithm commands
+\renewcommand{\algorithmiccomment}[1]{\hfill {\color{commentgreen}\textbf{\textit{// #1}}}}
+\newcommand{\COMMENTLINE}[1]{\STATE {\color{commentgreen}\textbf{\textit{// #1}}}}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\renewcommand{\algorithmicrepeat}{\textbf{do}}
+\renewcommand{\algorithmicuntil}{\textbf{while}}
+
+% math commands
+\newcommand{\mat}[1]{\ensuremath{\mathbf{#1}}}
+
+\newcommand{\D}{\ensuremath{\mathcal{D}}}
+\newcommand{\C}{\ensuremath{\mathcal{C}}}
+\newcommand{\DP}{\ensuremath{\mathcal{P}}}
+\newcommand{\LLM}{\ensuremath{\mathcal{M}}}
+\newcommand{\SRC}{\ensuremath{SRC}}
+\newcommand{\s}{\textbf{S}}
+\newcommand{\R}{\textbf{R}}
+\newcommand{\DC}{\ensuremath{\mathcal{DC}}}
+\newcommand{\p}{\textbf{p}}
+\newcommand{\PP}{\textbf{$P_p$}}
+\newcommand{\PE}{\textbf{$P_{e}$}}
+
+\newcommand{\Ppre}{\textbf{$P_{d}$}}
+\newcommand{\Pfe}{\textbf{$P_{f}$}}
+\newcommand{\Pmodel}{\textbf{$P_{m}$}}
+
+\newcommand{\PEij}{\textbf{$P_{e_{ij}}$}}
+\newcommand{\CO}{\ensuremath{\mathcal{C}}}
+\newcommand{\TL}{\ensuremath{\mathcal{L}}}
+\newcommand{\M}{\ensuremath{\mathcal{M}}}
+\newcommand{\T}{\ensuremath{\mathcal{T}}}
+\newcommand{\bluetext}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\todo}[1]{\colorbox{yellow}{#1}}
+
+\newtheorem{example}{Example}
+\newtheorem{challenge}{Challenge}
+\newcommand{\red}[1]{{\color{red}#1}}
+
+%% The following content must be adapted for the final version
+% paper-specific
+\newcommand\vldbdoi{10.14778/3742728.3742754}
+\newcommand\vldbpages{2639 - 2652}
+% issue-specific
+\newcommand\vldbvolume{18}
+\newcommand\vldbissue{8}
+\newcommand\vldbyear{2025}
+% should be fine as it is
+\newcommand\vldbauthors{\authors}
+\newcommand\vldbtitle{\shorttitle} 
+% leave empty if no availability url should be set
+\newcommand\vldbavailabilityurl{https://github.com/CoDS-GCS/CatDB.git}
+% whether page numbers should be shown or not, use 'plain' for review versions, 'empty' for camera ready
+\newcommand\vldbpagestyle{empty}
+
+\usepackage{afterpage}
+\newlength{\oldtextfloatsep}\setlength{\oldtextfloatsep}{\textfloatsep}
+\newcommand{\setspace}[1]{\setlength{\textfloatsep}{#1}}
+\newcommand{\resetspace}{  \afterpage{\global\setlength{\textfloatsep}{\oldtextfloatsep}}}
+
+\usepackage{flushend}
+
+% \usepackage[a-2b]{pdfx}
+% \pdfminorversion=7

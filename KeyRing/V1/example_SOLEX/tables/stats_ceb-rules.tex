@@ -1,0 +1,24 @@
+\begin{table*}[t]
+\centering
+\caption{Ten of the 16 verified rules that {\sys} generates for Stats-CEB, sorted by descending priority (Pri.). The Calcite column marks whether Apache Calcite has an equivalent rule: \cmark~exact, $\sim$~partial, \xmark~none. Seven of the ten rules have none.}
+\vspace{-.35cm}
+\label{tab:rules:statsceb}
+\small
+\begin{tabular}{rlrp{0.52\textwidth}c}
+\toprule
+\textbf{\#} & \textbf{Rule} & \textbf{Pri.} & \textbf{Transformation} & \textbf{Calcite} \\
+\midrule
+1  & \texttt{AggregateDecomposeCrossJoin}       & 80 & \texttt{COUNT(*)} over an $N$-way implicit cross join $\to$ partial-count CTEs & \xmark \\
+2  & \texttt{AggregateDecomposeMultiHub}        & 79 & \texttt{COUNT(*)} over a two-level star join $\to$ per-branch CTEs & \xmark \\
+3  & \texttt{JoinDecomposeToPreaggregatedCount} & 70 & \texttt{COUNT(*)} over a multi-branch join $\to$ pre-aggregated CTEs per branch & \xmark \\
+4  & \texttt{JoinEliminateViaFK}                & 60 & Remove a bridge table that appears only in FK equalities & $\sim$ \\
+5  & \texttt{PredicateDeriveTransitive}         & 55 & Derive transitive FK equalities through a shared bridge table & $\sim$ \\
+6  & \texttt{AggregateRewriteCountToSumProduct} & 50 & \texttt{COUNT(*)} over joined pre-aggregated CTEs $\to$ \texttt{SUM}($n_1 \times n_2 \times \cdots$) & \xmark \\
+7  & \texttt{FilterMaterializeAsCte}            & 35 & Materialize filtered scan branches as count CTEs & \xmark \\
+8  & \texttt{FilterProjectTranspose}            & 30 & Push a filter below a projection that it only reads through & \cmark \\
+9  & \texttt{AggregateCountJoinToSumProduct}    & 22 & \texttt{COUNT(*)} over pre-aggregated CTE scans $\to$ \texttt{SUM}($n_1 \times n_2 \times \cdots$) & \xmark \\
+10 & \texttt{PredicateRangeToBetween}           & 10 & $c \geq x \wedge c \leq y \to c$ \texttt{BETWEEN} $x$ \texttt{AND} $y$ & \xmark \\
+\bottomrule
+\end{tabular}
+\vspace{-0.35cm}
+\end{table*}

@@ -1,0 +1,59 @@
+\section{The {\sys} System Architecture}
+\label{sec:architecture}
+
+{\sys} has two loosely coupled components.
+First, the \emph{Rule Generator} runs offline, and distills the output of an LLM rewriter into verified rules and composes them in a rule set.
+Second, the \emph{Rewrite Engine} does online rewriting of incoming queries with these rules and no LLM calls.
+The two components share the rule set and its \emph{Fragment Index} maps fragment keys to rule identifiers.
+Figure~\ref{fig:system_arch} shows the interaction among these two components.
+
+\textbf{Design Principles:}
+Three principles shape {\sys}, each serving a requirement from Section~\ref{sec:problem}.
+First, {\sys} distills transformation rules, not queries. A rule refers to operator patterns, so it fires on new queries with other characteristics (R3).
+Second, {\sys} verifies each rule once, before admission, not per query, so it adds no cost at query time (R1, R2).
+Third, {\sys} reuses the host engine: it rewrites only the logical plan and returns SQL (R4).
+The host keeps its physical optimization, parallel execution, and memory management, so the speedup of a rewrite adds additional improvements.
+The LLM rewriter is pluggable: any tool that rewrites SQL (and reports the applied transformations and priorities) is applicable here.\shorten
+
+\subsection{Rule Generator}
+\label{sec:arch_generator}
+The Rule Generator expands the rule set in five steps, shown on the right of Figure~\ref{fig:system_arch}.
+First, it selects a sample of the workload queries $\mathcal{Q}_s \subseteq \mathcal{W}$. The sample may include queries flagged by runtime monitoring or by administrators.
+Second, the LLM rewriter produces a candidate rewrite $Q''$ for each sampled query $Q$.
+Third, the generator distills each pair $(Q, Q'')$ into a candidate rule.
+It compares the two logical plans, uses the rewriter's explanation of its transformations, and generalizes changes beyond the source query. Repeated rewrites are simply discarded.
+Fourth, an LLM implements each new rule as a C++ class with \texttt{Matches()} and \texttt{Apply()} methods.
+Fifth, the rule passes the three verification stages of Definition~\ref{def:verification}: a smoke test, a formal check, and a result-equivalence test if the formal check does not succeed.
+A failed stage returns a diagnostic to the LLM, which regenerates the implementation.
+Fragment keys of admitted rules are added to the Fragment Index without a need for restarting the Rewrite Engine.
+Section~\ref{sec:rule_generator} describes the details.
+
+\subsection{Rewrite Engine}
+\label{sec:arch_engine}
+The Rewrite Engine processes each query in four steps, shown on the left of Figure~\ref{fig:system_arch}.
+First, it parses the SQL query with the DuckDB parser~\cite{DuckDB} and lowers the parse tree into a logical plan of nine operator types: \textsf{Scan}, \textsf{Filter}, \textsf{Project}, \textsf{Join}, \textsf{Aggregate}, \textsf{Sort}, \textsf{Limit}, \textsf{SetOp}, and \textsf{CTE}.
+All rules operate on this representation, independent of the SQL dialect.
+Second, the engine extracts the fragment keys of the plan and looks them up in the Fragment Index. The result is the candidate rule set $\mathcal{R}(Q)$, and only these rules are evaluated.
+Third, the engine applies the candidate rules until no rule fires or a budget is reached. Rules fire in a priority order. Section~\ref{sec:query_rewriting} describes this ordering and an optional search over alternative orders.
+Fourth, we serialize the rewritten plan into the target SQL dialect.
+A query that matches no rule, or cannot be parsed, passes through unaltered.
+{\sys} never blocks a query and never needs an LLM at query time.\shorten
+
+\textbf{API:} Applications use {\sys} through a small API, where the host engine gets \texttt{new\_sql} as ordinary SQL without modifications:
+\begin{lstlisting}[style=ide, language=C++, morekeywords={RuleEngine, ActiveRuleIds, string}]
+/* Load the verified rule set and its Fragment Index */
+RuleEngine engine;
+/* Extract fragment keys and look up the Fragment Index */
+ActiveRuleIds rules = engine.Match(sql);
+/* Apply matched rules and unparse to the target dialect */
+string new_sql = engine.Rewrite(sql, rules, "PostgreSQL");
+\end{lstlisting}
+
+\begin{example}[Running Example]
+Stats-CEB query~88 counts the rows of a star join between \texttt{Users}, \texttt{Comments}, and \texttt{Badges}.
+The LLM rewriter decomposes this join into per-branch pre-aggregations.
+The Rule Generator then distills three rules from this query/rewritten-query pair, including a rule that decomposes a \texttt{COUNT(*)} star join over any number of branches.
+Query~122 joins \texttt{Users}, \texttt{Posts}, \texttt{PostHistory}, and \texttt{Badges}, which adds a branch and uses two tables not contained in query~88.
+The Rewrite Engine finds the fragment key \texttt{AGG(JOIN[INNER])} in the Fragment Index and applies the same three rules to query~122 without LLM calls.
+We describe how rules are distilled in Section~\ref{sec:rule_generator}, and how query~122 is rewritten in Section~\ref{sec:query_rewriting}.
+\end{example}

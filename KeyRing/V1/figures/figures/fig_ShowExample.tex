@@ -1,0 +1,54 @@
+\addtolength{\tabcolsep}{-0.4em}
+
+\newcommand{\linenumber}[1]{\texttt{\textcolor{gray}{#1:}}}
+\newcommand{\textblue}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\newcommand{\texttug}[1]{\texttt{\textcolor{tug}{#1}}}
+\newcommand{\texttugb}[1]{\texttt{\textcolor{tugb!120}{#1}}}
+\newcommand{\textblack}[1]{\texttt{#1}}
+\newcommand{\textgray}[1]{\texttt{\textcolor{gray}{#1}}}
+\newcommand{\textorang}[1]{\texttt{\textcolor{color4}{#1}}}
+\newcommand{\textgreen}[1]{\texttt{\textcolor{black!60!green}{#1}}}
+\newcommand{\textbrown}[1]{\texttt{\textcolor{brown}{#1}}}
+\newcommand{\textbperpal}[1]{\texttt{\textcolor{perpal}{#1}}}
+\newcommand{\textdarkgreen}[1]{\texttt{\textcolor{darkgreencode}{#1}}}
+
+% title AS t
+\begin{tikzpicture}[node distance=0pt, line width=0.5pt, inner sep=1mm]
+  \node[inner sep=0, draw=black, fill=lightgray!10] (origquery) {\includegraphics[scale=0.7]{img/fig_ShowExample_Query.pdf}};
+  \node[inner sep=0, right=of origquery, xshift=20pt, yshift=20pt] (versions) {\includegraphics[scale=0.435]{img/fig_ShowExample_Versions.pdf}};
+  \node[draw=none, fill=none, above=of origquery, yshift=10pt, xshift=70pt] (llm) { \includegraphics[scale=1.6]{img/fig_LLM.pdf}};
+  \node[inner sep=0, draw=none, xshift=60pt, yshift=-78pt] (results) {\includegraphics[scale=1]{img/Experiment0-Stats122.pdf}};
+
+  \draw[-{Latex[scale=0.5]}, lightgray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(28pt, 15pt)$);
+  \draw[-{Latex[scale=0.5]}, lightgray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(25pt, 8pt)$);
+  \draw[-{Latex[scale=0.5]}, lightgray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(23pt, 1pt)$);
+  \draw[-{Latex[scale=0.5]}, gray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(19pt, -5pt)$);
+  \draw[-{Latex[scale=0.5]}, gray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(13pt, -11pt)$);
+  \draw[-{Latex[scale=0.5]}, gray, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(8pt, -15pt)$);
+  \draw[-{Latex[scale=0.75]}, black, line width=0.65pt] ($(llm.east)+(0pt, 0pt)$) -- ($(llm.east)+(4pt, -22pt)$);
+
+
+  \node[draw=black, fill=tug, left=of llm,  xshift=-90pt, inner ysep=3pt, rotate=90, xshift=20pt, text=white] (resequel) {\small{\textbf{ReSequel}}};  
+  \draw[-{Latex[scale=0.5]}, black, line width=.5pt] ($(resequel.south east)+(0pt,-9pt)$) -- ($(resequel.north east)+(80pt,-9pt)$) node [midway, above, sloped, align=left, text width=60pt, draw=none, inner xsep=0, inner ysep=1pt] (r1) {\texttt{\tiny{\textbf{R1:} CTEs pre-filter }}} -- (llm);
+
+  \draw[-{Latex[scale=0.5]}, black, line width=.5pt] ($(resequel.south east)+(0pt,-19.2pt)$) -- (llm) node [midway, above, sloped,align=left, text width=60pt, draw=none, inner xsep=0, inner ysep=1pt, xshift=-9pt] (r1) {\texttt{\tiny{\textbf{R2:} Replace JOINs}}} ;
+
+  \draw[-{Latex[scale=0.5]}, gray, line width=.5pt] ($(resequel.south east)+(0pt,-35pt)$) -- ($(resequel.north east)+(80pt,-35pt)$) node [midway, above, sloped,align=left, text width=60pt, draw=none, inner xsep=0, inner ysep=1pt] (r1) {\texttt{\tiny{\textbf{Rn:} ... }}} -- (llm);
+
+  \draw[-{Latex[scale=0.5]}, black, line width=1.5pt] ($(origquery.north west)+(10pt,0pt)$) |- (resequel) ;
+
+  \node[draw=black, fill=tug, below=of versions,  xshift=-90pt, inner ysep=3pt, rotate=0, xshift=145pt, text=white, yshift=-10pt] (resequeltop1) {
+  \shortstack[c]{
+    \small{\textbf{ReSequel}}\\
+    \small{\textbf{Top-1}}}};  
+
+   \draw[{Latex[scale=0.5]}-, black, line width=0.65pt] ($(resequeltop1.north)+(-10pt, 0pt)$) -- ($(resequeltop1.north)+(-10pt, 10.5pt)$);  
+   \draw[{Latex[scale=0.5]}-, gray, line width=0.65pt] ($(resequeltop1.north)+(-5pt, 0pt)$) -- ($(resequeltop1.north)+(-5pt, 17pt)$);  
+   \draw[{Latex[scale=0.5]}-, gray, line width=0.65pt] ($(resequeltop1.north)+(0pt, 0pt)$) -- ($(resequeltop1.north)+(0pt, 23.2pt)$); 
+   \draw[{Latex[scale=0.5]}-, gray, line width=0.65pt] ($(resequeltop1.north)+(7pt, 0pt)$) -- ($(resequeltop1.north)+(7pt, 30pt)$);  
+   \draw[{Latex[scale=0.5]}-, gray!80, line width=0.65pt] ($(resequeltop1.north)+(11pt, 0pt)$) -- ($(resequeltop1.north)+(11pt, 36.5pt)$);  
+   \draw[{Latex[scale=0.5]}-, lightgray, line width=0.65pt,densely dashed] ($(resequeltop1.north)+(15pt, 0pt)$) -- ($(resequeltop1.north)+(15pt, 43pt)$);  
+  \draw[{Latex[scale=0.5]}-, lightgray, line width=0.65pt,densely dashed] ($(resequeltop1.north)+(18pt, 0pt)$) -- ($(resequeltop1.north)+(18pt, 49pt)$); 
+  
+\end{tikzpicture}

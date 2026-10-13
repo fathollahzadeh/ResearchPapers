@@ -1,0 +1,20 @@
+\begin{tikzpicture}[
+    node distance=-0.1mm,
+    text width=0.40\columnwidth,
+    textstyle/.style={font=\ttfamily},
+]    
+\node[rotate=90,anchor=south, align=center, minimum width=144pt, text width=144pt, minimum height=15pt, fill=lightgray!40, draw=lightgray!40](usr_msg){Main User Message};
+
+\node[textstyle, yshift=-5pt, right=of usr_msg,xshift=7pt, yshift=-2pt] (rule){\textbf{\# Dataset Info (e.g., number of samples)}};
+\node[textstyle, below=of rule] (rule){\textbf{\# User Provided Description}};
+\node[textstyle, below=of rule] (rule){\textbf{\# Schema, and Data Profiling Info:}};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Column Name (natural language text)};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Column Data Type (e.g., int, and float)};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Column Type (e.g., categorical column)};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} List of Categorical Values};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} NaN Values Ratio};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Disctinct Values Count};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Statistical Values (e.g., min \& max values)};
+\node[textstyle, below=of rule] (rule){\ \ \textbf{\ding{87}} Dependencies (e.g., Primary Key)};
+\end{tikzpicture}
+

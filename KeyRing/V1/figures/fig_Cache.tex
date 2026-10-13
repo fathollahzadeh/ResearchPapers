@@ -1,0 +1,27 @@
+\newcommand{\addlayer}[9]{
+    \pgfmathsetmacro{\cubex}{#1}
+    \pgfmathsetmacro{\cubey}{#2}
+    \pgfmathsetmacro{\cubez}{#3}
+    \pgfmathsetmacro{\cubexm}{0}
+    \pgfmathsetmacro{\cubeym}{#6}
+
+    \draw[draw=#4, fill=#5] (0,#6,0)-- ++(-\cubex,0,0)-- ++(0,-\cubey,0) -- ++(\cubex,0,0) -- cycle (0,#6,0) -- ++(0,0,-\cubez)  -- ++(0,-\cubey,0) -- ++(0,0,\cubez) -- cycle (0,#6,0) -- ++(-\cubex,0,0) -- ++(0,0,-\cubez) -- ++(\cubex,0,0) -- cycle;
+     
+    \draw (\cubexm-\cubex/1.9,\cubeym-0.4,0) node {#7};
+    \draw (\cubexm-\cubex/2.9,\cubeym+0.17,0) node[text=black] {\textbf{#8}};
+    \draw (\cubexm+0.55,\cubeym+0.2,0) node[text=black, rotate=45, font=\large] (dbms) {\tiny\textbf{#9}};
+}
+
+\begin{tikzpicture}[line join=round, node distance=0, font=\scriptsize]
+    \sffamily
+    \addlayer{2.5}{0.7}{0.8}{black}{lightgray!30}{0.4}{{\shortstack[c]{Find Template Versions\\ from  Rewritten Templates}}}{Template Cache}{};
+    \addlayer{2.5}{0.7}{0.8}{black}{lightgray!10}{1.6}{ {\shortstack[c]{Find a Similar Version\\ from Top-1 History}} }{Query Cache}{};  
+     
+    % \draw[-{Latex[scale=0.65]},  black, line width=2pt] (-1.5,0.9) -- (-1.5,0.5);
+      
+    
+    \node[draw=black, single arrow, minimum height=1mm, minimum width=6.85mm, single arrow head extend=0.1mm,
+              anchor=east,rotate=270, fill=black, line width=1pt] at (-2.07,0.3) {};
+    \node[text=white] at (-2.06,0.73) {\tiny\textbf{Missed}};           
+
+\end{tikzpicture}

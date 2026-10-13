@@ -1,0 +1,102 @@
+\newcommand{\rowdata}[7]{
+    \node[textstyle,fill=#7, below=of drow-#1] (drow-#2){\texttt{#2}};
+    \node[textstyle,fill=#7, below=of dexpe-#1, minimum width=27pt] (dexpe-#2){\texttt{#3}};
+    \node[textstyle,fill=#7, below=of dgender-#1, minimum width=17pt] (dgender-#2){\texttt{#4}};
+    \node[textstyle,fill=#7, below=of dpostal-#1, minimum width=22pt] (dpostal-#2){\texttt{#5}};
+    \node[textstyle,fill=#7, below=of dsalary-#1, minimum width=17pt] (dsalary-#2){\texttt{#6}};
+}
+
+\newcommand{\rowdatac}[9]{
+    \node[textstyle,fill=#8, below=of crow-#1] (crow-#2){\texttt{#2}};
+    \node[textstyle,fill=#8, below=of cexpe-#1, minimum width=26.8pt, text=tug] (cexpe-#2){\texttt{#3}};
+    \node[textstyle,fill=#8, below=of cgender-#1, minimum width=18.5pt, text=black] (cgender-#2){\texttt{#4}};
+    \node[textstyle,fill=#8, below=of cpostal-#1, minimum width=15pt, text=black] (cpostal-#2){\texttt{#5}};
+    \node[textstyle,fill=#8, below=of cpostalc-#1, minimum width=14pt, text=black] (cpostalc-#2){\texttt{#6}};
+    \node[textstyle,fill=#8, below=of csalary-#1, minimum width=17pt] (csalary-#2){\texttt{#7}};
+}
+
+\newcommand{\rowdatae}[7]{
+    \node[textstyle,fill=#7, below=of ccpp-#1, minimum width=13pt, text=black] (ccpp-#2){\texttt{#3}};
+    % \node[textstyle,fill=#7, below=of cjava-#1, minimum width=13.5pt, text=blue] (cjava-#2){\texttt{#4}};
+    \node[textstyle,fill=#7, below=of cetc-#1, minimum width=13pt, text=black] (cetc-#2){\texttt{#5}};
+    \node[textstyle,fill=#7, below=of cpython-#1, minimum width=19pt, text=black] (cpython-#2){\texttt{#6}};
+}
+
+\newcommand{\rowdatacat}[7]{
+    \node[textstyle,fill=#7, below=of catcol-#1, minimum width=30pt] (catcol-#2){\texttt{#3}};
+    \node[textstyle,fill=#7, below=of catdistinct-#1, minimum width=30pt] (catdistinct-#2){\texttt{#4}};
+    \node[textstyle,fill=#7, below=of cattype-#1, minimum width=35pt] (cattype-#2){\texttt{#5}};
+    \node[textstyle,fill=#7, below=of catsamples-#1, minimum width=75pt] (catsamples-#2){\texttt{#6}};
+}
+
+\newcommand{\rowdatacatu}[7]{
+    \node[textstyle,fill=#7, below=of catcol-#1, minimum width=30pt, text=black] (catcol-#2){\texttt{#3}};
+    \node[textstyle,fill=#7, below=of catdistinct-#1, minimum width=30pt, text=black] (catdistinct-#2){\texttt{#4}};
+    \node[textstyle,fill=#7, below=of cattype-#1, minimum width=35pt, text=black] (cattype-#2){\texttt{#5}};
+    \node[textstyle,fill=#7, below=of catsamples-#1, minimum width=75pt, text=black] (catsamples-#2){\texttt{#6}};
+}
+
+\begin{tikzpicture}[node distance=-0.1mm, font=\tiny, line width=0.2pt,
+  textstyleh/.style={draw=lightgray,font=\tiny, minimum width=5pt,minimum height=6.2pt, inner xsep=0.3mm, inner ysep=0mm, fill=lightgray!20},
+  textstyle/.style={draw=lightgray!110,font=\tiny, minimum width=5pt,minimum height=6.2pt, inner xsep=0.3mm, inner ysep=0mm},]  
+
+  \node[textstyleh, minimum width=141pt, anchor=west, inner ysep=0.3mm] (tblclean) {\textbf{\texttt{Clean Dataset}}};
+  \node[textstyleh,anchor=west, yshift=-2.95pt] (crow-0) at(tblclean.south west){\textbf{\texttt{\#}}};
+  \node[textstyleh, right=of crow-0, minimum width=27pt,anchor=west] (cexpe-0) {\textbf{\texttt{Experience}}};
+  \node[textstyleh, right=of cexpe-0, minimum width=18.5pt,anchor=west] (cgender-0) {\textbf{\texttt{Gender}}};
+  \node[textstyleh, right=of cgender-0, minimum width=15pt,anchor=west] (cpostal-0) {\textbf{\texttt{State}}};
+  \node[textstyleh, right=of cpostal-0, minimum width=14pt,anchor=west] (cpostalc-0) {\textbf{\texttt{Zip}}};
+  \node[textstyleh, right=of cpostalc-0, minimum width=13pt,anchor=west] (ccpp-0) {\textbf{\texttt{C++}}};
+  % \node[textstyleh, right=of ccpp-0, minimum width=13.5pt,anchor=west] (cjava-0) {\textbf{\texttt{Java}}};
+  \node[textstyleh, right=of ccpp-0, minimum width=13pt,anchor=west] (cetc-0) {\textbf{\texttt{...}}};
+  \node[textstyleh, right=of cetc-0, minimum width=19pt,anchor=west] (cpython-0) {\textbf{\texttt{Python}}};
+  \node[textstyleh, right=of cpython-0, minimum width=17pt,anchor=west] (csalary-0) {\textbf{\texttt{Salary}}};
+
+  \rowdatae{0}{1}{0}{1}{...}{0}{none};
+  \rowdatae{1}{2}{0}{0}{...}{0}{lightgray!30};
+  \rowdatae{2}{3}{1}{0}{...}{0}{none};
+  \rowdatae{3}{4}{1}{0}{...}{0}{lightgray!30};
+  \rowdatae{4}{5}{0}{1}{...}{1}{none};
+
+  \rowdatac{0}{1}{\textbf{1 year}}{Female}{CA}{7050}{100}{none}{tug};
+  \rowdatac{1}{2}{\textbf{2 years}}{Female}{TX}{7871}{150}{lightgray!30}{black};
+  \rowdatac{2}{3}{\textbf{3 years}}{Male}{TX}{}{300}{none}{tug};
+  \rowdatac{3}{4}{\textbf{3 years}}{Female}{}{7871}{310}{lightgray!30}{black};
+  \rowdatac{4}{5}{\textbf{1 year}}{Male}{CA}{}{200}{none}{tug};
+
+  \draw[tug, line width=0.7pt] (cexpe-0.north west) -- (cexpe-5.south west) -- (cexpe-5.south east) -- (cexpe-0.north east) -- (cexpe-0.north west);
+
+% %   \draw[lightgray] (crow-0.north west) -- (crow-5.south west) -- (csalary-5.south east) -- (csalary-0.north east);
+  
+%   \node[textstyleh, yshift=-5pt, xshift=4pt,below=of crow-5 ,minimum width=30pt] (catcol-0) {\textbf{\texttt{Column Name}}};
+%   \node[textstyleh, right=of catcol-0, minimum width=30pt] (catdistinct-0) {\textbf{\texttt{\% Distinct}}};
+%   \node[textstyleh, right=of catdistinct-0, minimum width=35pt] (cattype-0) {\textbf{\texttt{Feature Type}}};
+%   \node[textstyleh, right=of cattype-0,minimum width=75pt] (catsamples-0) {\textbf{\texttt{Samples}}};
+  
+%   \rowdatacat{0}{1}{Experience}{100}{Sentence}{[12 Months, two years, ...]}{none};
+%   \rowdatacat{1}{2}{Skills}{100}{Sentence}{["Python,Java", ...]}{lightgray!30};
+%   \rowdatacat{2}{3}{Gender}{60}{Categorical}{[F, Female, M]}{none};
+%   \rowdatacat{3}{4}{Address}{100}{Sentence}{[7050 CA, TX 7871, CA, ...]}{lightgray!30};
+
+%   \rowdatacatu{4}{5}{Experience}{60}{Categorical}{[1 year, 2 years, 3 years]}{none};
+%   \rowdatacatu{5}{6}{Skills}{--}{List}{[SQL, Java, C++, ...]}{lightgray!30};
+%   \rowdatacatu{6}{7}{Gender}{40}{Categorical}{[Male, Female]}{none};
+%   \rowdatacatu{7}{8}{State}{40}{Categorical}{[CA, TX]}{lightgray!30};
+%   \rowdatacatu{8}{9}{Zip}{40}{Categorical}{[7050, 7871]}{none};
+
+% %   \draw[lightgray] (catcol-0.north west) -- (catcol-7.south west) -- (catsamples-7.south east) -- (catsamples-0.north east);
+%   \draw[black, line width=0.5pt] (catcol-4.south west) -- (catsamples-4.south east);
+
+%   \draw[-{Latex[scale=0.5]}, black, line width=0.7pt] (catcol-1.west) -- ($(catcol-1.west)+(-4.5pt,0)$) -- ($(catcol-5.west)+(-4.5pt,0)$) -- (catcol-5.west);
+
+%   \draw[-{Latex[scale=0.5]}, black, line width=0.7pt] (catcol-2.west) -- ($(catcol-2.west)+(-6.5pt,0)$) -- ($(catcol-6.west)+(-6.5pt,0)$) -- (catcol-6.west);
+
+%   \draw[-{Latex[scale=0.5]}, black, line width=0.7pt] (catcol-3.west) -- ($(catcol-3.west)+(-8.5pt,0)$) -- ($(catcol-7.west)+(-8.5pt,0)$) -- (catcol-7.west);
+
+%   \draw [line width=0.7pt,decorate,decoration={calligraphic brace,amplitude=1pt}] ($(catcol-9.south west)+(-0.5pt,0pt)$) -- ($(catcol-8.north west)+(-0.5pt,0pt)$);
+
+%   \draw[-{Latex[scale=0.5]}, black, line width=0.7pt] (catcol-4.west) -- ($(catcol-4.west)+(-10.5pt,0)$) -- ($(catcol-8.west)+(-10.5pt,-2.5pt)$) -- ($(catcol-8.west)+(-1pt,-2.5pt)$);
+
+%   \node[textstyleh, right=of catsamples-7,minimum width=43pt, rotate=90, yshift=-3.1pt, xshift=-3pt, draw=none, fill=none, text=gray] {\textbf{\texttt{Data Catalog}}};
+
+\end{tikzpicture}

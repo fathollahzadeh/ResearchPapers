@@ -1,0 +1,47 @@
+\begin{table*}[ht]
+    \centering
+    \caption{The prompts used to generate the optimized template version are based on tasks and operations. In addition to the prompt, we also encode the schema (e.g., relevant tables, columns, and indexes) as well as statistics in the requests. }
+    \vspace{-0.4cm}
+    \label{tbl:prompt}
+    \resizebox{0.99\textwidth}{!}{
+        \addtolength{\tabcolsep}{-.1em}	
+        \begin{tabular}{c|p{13cm}|p{10cm}}
+        \toprule
+        \textbf{V\#}& \textbf{Prompt Content (Template SQL Script + Projected Schema + Metadata + Examples)} & \textbf{LLM Recommend Example (Implemented Functions + New Template)} \\ \midrule 
+        $V1$              & \texttt{Rewrite SQL query for optimization, possibly using \textbf{data skipping through prefiltering}}.& \texttt{\textblue{CREATE INDEX} \textbperpal{trgm\_idx} \textblue{ON} \textbperpal{name} \textblue{USING} gin (\textbperpal{name} gin\_trgm\_ops);} \\ \chline
+        $V2$              & \texttt{Rewrite SQL query for optimization by \textbf{recommending appropriate data structures}.}& \texttt{\textblue{SET LOCAL} enable\_nestloop = \textbperpal{off}; \textblue{SET LOCAL} enable\_hashjoin = \textbperpal{on};}  \\ \chline
+        $V3$              & \texttt{\textbf{Implement functions} to optimize queries involving \textbf{equality (=) conditions}.} & \texttt{\textblue{CREATE INDEX} \textbperpal{idx\_hash\_role} \textblue{ON} \textbperpal{role\_type} \textblue{USING HASH} (role);} \\ \chline
+        $V4$              & \texttt{Rewrite the SQL query based on \textbf{join types and filter operations} ($p1$).} & \texttt{Push filters to scans, replace cross joins with explicit INNER JOINs and use EXISTS for many‑to‑many links.} \\ \chline
+        $V5$              & \texttt{Optimize the query by \textbf{implementing a join cardinality estimation formula} ($p2$).} & \texttt{Formula: (\textbperpal{rows\_A} * \textbperpal{rows\_B}) / max(\textbperpal{distinct\_A}, \textbperpal{distinct\_B}).} \\ \chline
+        $V6$              & \texttt{Enables \textbf{probabilistic data structures} for highly efficient Joins($p3$).} & \texttt{\textblue{CREATE EXTENSION IF NOT EXISTS} bloom;} \\ \chline
+        $V7$              & \texttt{Rewrite the template to \textbf{optimize subsequent filtering}.} & \texttt{Optimized with a CTE for the filtered table and EXISTS clauses.}\\  \chline
+        $V8$              & \texttt{\textbf{Candidate Key Identification}: Analyzes the provided schema statistics to identify columns where the count of distinct values.} & \texttt{\textblue{CREATE FUNCTION} find\_candidate\_keys(\textbperpal{table\_name} \textblue{TEXT})} \\ 
+        % $V9$              & The optimized query uses a JOIN, processing the match once, with DISTINCT to avoid duplicates.& \\
+        \bottomrule
+    \end{tabular}
+}  
+\end{table*}
+
+
+% Orig Query: 
+% SELECT customer_id
+% FROM Customers c
+% WHERE EXISTS (
+%     SELECT 1
+%     FROM Orders o
+%     WHERE o.customer_id = c.customer_id
+%     AND o.amount > 1000
+% );
+
+% new query:
+% SELECT DISTINCT c.customer_id
+% FROM Customers c
+% JOIN Orders o ON c.customer_id = o.customer_id
+% WHERE o.amount > 1000;
+
+
+% The optimized query uses a JOIN, processing the match once, with DISTINCT to avoid duplicates. 
+
+
+
+

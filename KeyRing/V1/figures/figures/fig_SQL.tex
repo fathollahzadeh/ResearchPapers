@@ -1,0 +1,17 @@
+\begin{tikzpicture}[node distance=3pt, line width=0.5pt, inner xsep=0.1mm, inner ysep=0.3mm]
+    \node[draw=black, fill=none, inner sep=0mm, minimum width=35pt, minimum height=42pt, line width=0.5pt](frame) {};
+
+    \node[draw=black, fill=none, inner sep=0.2mm,line width=0.5pt, below=of frame.north, xshift=7pt, yshift=-5pt,rounded corners=2pt](sql) {\small{\texttt{\emph{\textbf{SQL}}}}};
+    \node[draw=none, fill=none, inner sep=0mm,line width=0.5pt, below=of frame.north, xshift=-1pt, yshift=-18pt, minimum width=17pt](sql) {
+      \shortstack[l]{
+        \tiny{\textcolor{argray}{\texttt{\textbf{SELECT} ...}}} \\
+        \tiny{\textcolor{argray}{\texttt{\textbf{FROM} ...}}} \\
+        \tiny{\textcolor{argray}{\texttt{\textbf{WHERE} ...}}}
+      }
+      };
+
+      \node[draw=none, fill=none, inner sep=0mm, below=of frame.north, xshift=-10pt, text=lightgray](code) {\small{\faCode}};
+      
+    
+   
+\end{tikzpicture}

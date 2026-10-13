@@ -1,0 +1,90 @@
+\addtolength{\tabcolsep}{-0.4em}
+
+\newcommand{\linenumber}[1]{\texttt{\textcolor{gray}{#1:}}}
+\newcommand{\textblue}[1]{\texttt{\textcolor{black}{\textbf{#1}}}}
+
+\newcommand{\texttug}[1]{\texttt{\textcolor{tug}{#1}}}
+\newcommand{\texttugb}[1]{\texttt{\textcolor{tugb!120}{#1}}}
+\newcommand{\textblack}[1]{\texttt{#1}}
+\newcommand{\textorang}[1]{\texttt{\textcolor{color4}{#1}}}
+\newcommand{\textgreen}[1]{\texttt{\textcolor{black!60!green}{#1}}}
+\newcommand{\textbrown}[1]{\texttt{\textcolor{brown}{#1}}}
+\newcommand{\textbperpal}[1]{\texttt{\textcolor{perpal}{#1}}}
+\newcommand{\tableicon}[1]{\textcolor{gray}{\faTable\ }}
+\newcommand{\textdarkgreen}[1]{\textbf{\texttt{\textcolor{darkgreencode}{#1}}}}
+
+% title AS t
+\begin{tikzpicture}[node distance=0pt, line width=0.7pt, inner sep=1mm, anchor=north]
+    \sffamily
+    \node[draw=tugb!20, fill=tugb!5, minimum height=120pt, , inner xsep=3mm] (t1){
+        \shortstack[l]{
+          \textcolor{blue}{\underline{\textbf{\Large{Template $\qt_1$:}}}} \\ \\
+          \textblack{\textblue{SELECT ...} }\\
+          \ \ \ \ \textblue{FROM} \textblack{ R, S, T, U}\\
+          \ \ \ \ \textblack{\textblue{WHERE} ...} \\
+          \ \ \ \ \textblack{\textblue{GROUP BY} ...} \\ \\
+          .................................................\\ 
+          \textblack{\tableicon\ R(\textbperpal{r1}, \textbperpal{r2}, \textbperpal{r3}, \textbperpal{r4})}\\
+          \textblack{\tableicon\ S(\textbperpal{s1}, \textbperpal{s4})} \\
+          \textblack{\tableicon\ T(\textbperpal{t1})}\\
+          \textblack{\tableicon\ U(\textbperpal{u1})}
+         }}; 
+
+       \node[draw=tugb!20, fill=tugb!5, right=of t1, minimum height=120pt, xshift=20pt, inner xsep=3mm] (t2){
+        \shortstack[l]{
+        \textcolor{blue}{\underline{\textbf{\Large{Template $\qt_2$:}}}} \\ \\
+          \textblack{\textblue{SELECT ...} }\\
+          \ \ \ \ \textblue{FROM} \textblack{ R, S, T, U, V}\\
+          \ \ \ \ \textblack{\textblue{WHERE} ...} \\ \\
+          .................................................\\
+          \textblack{\tableicon\ R(\textbperpal{r1})}\\
+          \textblack{\tableicon\ S(\textbperpal{s1}, \textbperpal{s2}, \textbperpal{s3})} \\
+          \textblack{\tableicon\ T(\textbperpal{t1}, \textbperpal{t2})}\\
+          \textblack{\tableicon\ U(\textbperpal{u1}, \textbperpal{u2})} \\
+          \textblack{\tableicon\ V(\textbperpal{v1}, \textbperpal{v2}, \textbperpal{v3})}
+         }}; 
+
+
+    \node[draw=tugb!20, fill=tugb!5, right=of t2, minimum height=120pt, xshift=20pt, inner xsep=3mm] (t3){
+        \shortstack[l]{
+          \textcolor{blue}{\underline{\textbf{\Large{Template $\qt_3$:}}}} \\ \\
+          \textblack{\textblue{SELECT ...} }\\
+          \ \ \ \ \textblue{FROM} \textblack{ R, H, K}\\
+          \ \ \ \ \textblack{\textblue{WHERE} ...} \\
+          \ \ \ \ \textblack{\textblue{GROUP BY} ...} \\
+          \ \ \ \ \textblack{\textblue{ORDER BY} ...} \\ \\
+          ............................................\\ 
+          \textblack{\tableicon\ R(\textbperpal{r1}, \textbperpal{r2})}\\
+          \textblack{\tableicon\ H(\textbperpal{h1}, \textbperpal{h2})} \\
+          \textblack{\tableicon\ K(\textbperpal{k1}, \textbperpal{k2}, \textbperpal{k3})}
+         }};      
+
+      \node[draw=lightgray, fill=lightgray!20, below=of t2, xshift=-5pt, yshift=-5pt] (ds1) {
+        \shortstack[l]{
+          \textcolor{gray}{\hspace{0pt}\textbf{\texttt{Downsampleling}} \hspace{344pt}}\\\\
+          \underline{\textbf{\texttt{Cluster Templates:}}} \\
+            \textblack{$C_1$ = |$\qt_1$ - $\qt_2$| = 1 $\Rightarrow$ $C_1$ = $\qt_1 \cup \qt_2$} \\
+            \textblack{$C_1$ = |$C_1$ - $\qt_3$| = 6 $\nleqslant$ 2 $\Rightarrow$ $C_2$ = $\qt_3$}\\
+            \textblack{$C_3$ = |$\qt_1$ - $\qt_3$| = 5 $\nleqslant$ 2 $\Rightarrow$ No change}\\
+            \textblack{$C_4$ = |$\qt_2$ - $\qt_3$| = 6 $\nleqslant$ 2 $\Rightarrow$ No change} %\\ \\
+         }};           
+
+     \node[draw=none, fill=white, right=of ds1.west, xshift=195pt] (ds2) {
+        \shortstack[l]{
+             \underline{$\ts_1$ (based on cluster\# $C_1$ ):} \\
+             \textblack{\ \tableicon\ R(\textbperpal{r1}, \textbperpal{r2}, \textbperpal{r3}, \textbperpal{r4})}\\
+             \textblack{\ \tableicon\ S(\textbperpal{s1}, \textbperpal{s2}, \textbperpal{s3}, \textbperpal{s4})} \\
+             \textblack{\ \tableicon\ T(\textbperpal{t1}, \textbperpal{t2})}\\
+             \textblack{\ \tableicon\ U(\textbperpal{u1}, \textbperpal{u2})}\\
+             \textblack{\ \tableicon\ V(\textbperpal{v1}, \textbperpal{v2}, \textbperpal{v3})}
+         }};               
+    \node[draw=none, fill=white, right=of ds2, xshift=7pt] (ds3) {
+        \shortstack[l]{
+             \underline{$\ts_2$ (based on cluster\# $C_2$ ):} \\
+             \textblack{\ \tableicon\ R(\textbperpal{r1}, \textbperpal{r2})}\\
+             \textblack{\ \tableicon\ H(\textbperpal{h1}, \textbperpal{h2})} \\
+             \textblack{\ \tableicon\ K(\textbperpal{k1}, \textbperpal{k2}, \textbperpal{k3})}
+         }};                    
+        
+\end{tikzpicture}
+

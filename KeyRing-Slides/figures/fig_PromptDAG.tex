@@ -1,0 +1,71 @@
+\begin{tikzpicture}[node distance=0.5mm, font=\tiny, line width=0.25pt,
+  itemstyle/.style={draw=black, fill=lightgray!10, inner ysep=0.7mm, inner xsep=0.5mm,minimum width=49pt},
+  itemstyledag/.style={draw=black, fill=lightgray!10, inner ysep=0.7mm, inner xsep=0.5mm,minimum width=10pt},
+  promptitemstyle/.style={draw=tugb,line width=0.10mm, fill=tugb!10, inner ysep=0.4mm, inner xsep=0.4mm}, minimum width=20pt]
+   
+    \node[draw=none, inner sep=1mm] (root) {\textbf{Chain Prompt}};
+
+    \node[itemstyle, below=of root, yshift=-12pt, xshift=0pt] (topk) {Select Top-K Features};
+    \node[itemstyle, below=of topk, yshift=-4pt, xshift=0pt] (rules) {
+      \shortstack[l]{
+        \faAngleRight\ Infer Instructions (\textbf{R})\\
+        \faAngleRight\ Project Metadata (\textbf{S})\\
+        \faAngleRight\ Prompt Template (\textbf{T})
+      }};
+    \node[itemstyle, draw=black,densely dotted, below=of rules, yshift=-4pt] (single_prompt) {\shortstack[c]{\textbf{\texttt{Single}} \\\textbf{\texttt{Prompt Generator}}}};
+
+    \node[itemstyle,inner ysep=0.1mm, right=of root, yshift=0pt, xshift=50pt] (split) {Features = $\displaystyle\bigcup_{i=1}^{\beta} G_i$};
+
+    
+    \node[itemstyledag, draw=tugb, fill=tugb!10, below=of split, yshift=-7pt, xshift=-35pt] (pp) { Preprocessing};
+    \node[itemstyledag,draw=mygreen, fill=mygreen!10, right=of pp, yshift=0pt, xshift=0pt] (fe) { Feature Engineering};
+    \node[itemstyledag,draw=tug, fill=tug!5, right=of fe, yshift=0pt, xshift=0pt] (ms) { Model Selection};
+
+    \node[itemstyle, minimum width=114, draw=black,densely dotted, below=of fe, xshift=3pt, yshift=-17pt, minimum height=32pt] {};
+
+    \draw[-{Latex[scale=0.7]}, tugb, line width=0.5pt] (pp) -- ($(pp)+(0pt, -25pt)$);
+    \draw[-{Latex[scale=0.7]}, mygreen, line width=0.5pt] (fe) -- ($(fe)+(0pt, -25pt)$);
+    \draw[-{Latex[scale=0.7]}, tug, line width=0.5pt] (ms) -- ($(ms)+(0pt, -25pt)$);
+
+    \node[itemstyle,inner xsep=3mm, inner ysep=1mm, minimum width=60pt, below=of fe, yshift=-2pt, xshift=0pt] (chainr) {
+      \faAngleRight\  Infer \textbf{R$_i$}, Project \textbf{S$_i$}, and Select \textbf{T$_i$}};       
+
+      % Preprocessing Chain:
+      \node[promptitemstyle, below=of chainr, xshift=-40pt, yshift=-5pt] (chainprompt1) {Prompt 1};
+
+      \node[promptitemstyle, below=of chainprompt1,xshift=5pt,inner ysep=1.2mm, inner xsep=0.9mm, yshift=2.3pt, densely dotted, line width=0.3pt] (chainprompt2) {};
+
+      \node[promptitemstyle,below=of chainprompt2,xshift=5pt,inner ysep=1.2mm, inner xsep=0.9mm, yshift=6pt, densely dotted, line width=0.3pt] (chainprompt3) {};
+
+      \node[promptitemstyle, below=of chainprompt3, xshift=5pt, yshift=6pt, line width=0.3pt] (chainpromptn) {Prompt $\beta$};
+
+      % Feature Engineering Chain:
+      \node[promptitemstyle, draw=mygreen, fill=mygreen!10, below=of chainr, xshift=0pt, yshift=-5pt] (chainprompt1) {Prompt 1};
+
+      \node[promptitemstyle, draw=mygreen, fill=mygreen!10, below=of chainprompt1,xshift=5pt,inner ysep=1.2mm, inner xsep=0.9mm, yshift=2.3pt, densely dotted, line width=0.3pt] (chainprompt2) {};
+
+      \node[promptitemstyle, draw=mygreen, fill=mygreen!10,below=of chainprompt2,xshift=5pt,inner ysep=1.2mm, inner xsep=0.9mm, yshift=6pt, densely dotted, line width=0.3pt] (chainprompt3) {};
+
+      \node[promptitemstyle, draw=mygreen, fill=mygreen!10, below=of chainprompt3, xshift=5pt, yshift=6pt, line width=0.3pt] (chainpromptn) {Prompt $\beta$};
+
+      % Model Selection Chain:
+      \node[promptitemstyle, draw=tug, fill=tug!5, below=of chainr, xshift=47pt, yshift=-5pt] (mschainprompt1) {
+        \shortstack[c]{Model\vspace{-1pt}\\Selection \vspace{-1pt}\\Prompt}
+      };
+
+      \node[itemstyle, draw=none, fill=none,densely dotted, below=of chainprompt3, yshift=-4pt]{\textbf{\texttt{Chain Prompt Generator}}};
+
+      % lines
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (root) -- ($(split.west)+(0pt,-0.5pt)$);
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (root) -- ($(topk.north)+(0pt,0pt)$);
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (topk) -- (rules);
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (rules) -- (single_prompt);
+
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (split) -- (pp);
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (split) -- ($(fe.north)+(-5pt,0pt)$);
+      \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (split) -- (ms);   
+      
+      \node[draw=none, inner sep=0mm, right=of root, xshift=10pt, yshift=3pt]  {$\beta > 1$};
+      \node[draw=none, inner sep=0mm, below=of root, xshift=-10pt, yshift=0pt]  {$\beta = 1$};
+  
+\end{tikzpicture}

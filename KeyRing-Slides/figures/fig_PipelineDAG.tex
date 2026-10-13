@@ -1,0 +1,26 @@
+\begin{tikzpicture}[node distance=0.5mm, font=\tiny, line width=0.25pt,
+  itemstyle/.style={draw=gray, fill=white, inner ysep=0.4mm, inner xsep=0.3mm,minimum width=40pt, minimum height=6pt},%,rounded corners
+  promptitemstyle/.style={draw=gray,line width=0.10mm, fill=white, inner ysep=0.4mm, inner xsep=0.5mm},
+  llmstyle/.style={draw=black,line width=0.10mm, fill=tugb!30, inner ysep=0.4mm, inner xsep=0.5mm}]
+   
+  \node[llmstyle, draw=none, fill=none] (code_llm) {\includegraphics[scale=0.9]{img/fig_LLM.pdf}};
+ 
+  \node[draw=black, fill=lightgray!10, inner sep=1mm, rounded corners, below=of code_llm, yshift=-6pt, line width=0.3pt] (raw) {Raw Pipeline Code};
+  
+  \node[draw=black,fill=lightgray!10, inner sep=1mm, rounded corners, below=of raw, yshift=-6pt, line width=0.3pt] (parse) {Parse \& Compile};
+  
+  \node[draw=black,fill=black, below=of parse, xshift=0pt, yshift=-6pt, inner sep=1mm, rounded corners,line width=0.3pt, text=white] (exec) {Execute};
+
+  \node[draw=none, inner sep=0mm, right=of parse, yshift=3pt, xshift=-1pt] (e1) {\tiny{Error}};
+  \node[draw=none, inner sep=0mm, right=of exec, yshift=3pt, xshift=1pt] (e2) {\tiny{Error}};
+
+  \node[diamond, right=of parse, xshift=16pt,draw=black, inner sep=1mm, fill=white, line width=0.4pt] (condition) {};
+  \draw[-{Latex[scale=0.7]}, densely dotted, line width=0.5pt, black] (parse.east) -- (condition.west);
+  \draw[-{Latex[scale=0.7]}, densely dotted, line width=0.5pt] (exec.east)-| ($(exec.east)+(32.4pt,0pt)$) -- (condition.south);
+  \draw[-{Latex[scale=0.7]}, densely dotted, line width=0.5pt] (condition.north)|- ($(condition.north)+(0pt,31pt)$) -- (code_llm);
+
+  \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (code_llm) -- (raw);
+  \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (raw) -- (parse);
+  \draw[-{Latex[scale=0.7]}, black, line width=0.5pt] (parse) -- (exec);
+  
+\end{tikzpicture}

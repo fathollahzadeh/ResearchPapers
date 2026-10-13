@@ -1,0 +1,169 @@
+% KeyRing system architecture: Datasets -> Column Profiler -> Ring Builder -> Budgeted Verifier -> join graph.
+% Colours: University of Waterloo palette (setting_uwcolors.tex).
+%   neutral = UW greys and black, LLM = UW gold, key domains = Mathematics pink,
+%   control = Science blue, datasets = faculty colours.
+\renewcommand{\arraystretch}{1}
+
+\input{fig_TableIcon.tex} % table icon (pic tableicon=<color>)
+
+% \iconbox{name}{x}{y}{width}{icon}{text}[box options]: tight box, icon on the left, text centered in the rest
+\providecommand{\iconbox}[7][]{%
+    \node[comp, minimum width=#5, minimum height=16pt, inner sep=0pt, #1] (#2) at (#3, #4) {};
+    \node[icontile] at ($(#2.west)+(8pt,0pt)$) {#6};
+    \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(#2.center)+(6pt,0pt)$) {#7};
+}
+
+
+\begin{tikzpicture}[node distance=3pt, line width=0.5pt, inner xsep=0.4mm, inner ysep=0.5mm,
+    panel/.style={draw=uwgreyB, fill=uwgreyA!35, rounded corners=2pt, inner sep=0mm, minimum height=112pt},
+    comp/.style={draw=uwgreyB, fill=white, rounded corners=2pt, line width=0.4pt, inner sep=1mm, align=center, font=\ttfamily\scriptsize},
+    paneltitle/.style={draw=none, fill=none, font=\footnotesize\bfseries, text height=1.7ex, text depth=0.4ex},
+    bigarrow/.style={-{Latex[length=4pt,width=3.4pt]}, draw=uwgreyC, line width=0.9pt, rounded corners=2pt},
+    flow/.style={-{Latex[length=3pt,width=2.6pt]}, draw=uwgreyC!80, line width=0.6pt, rounded corners=1.5pt},
+    bus/.style={draw=uwgreyC!80, line width=0.6pt},
+    ctrl/.style={-{Latex[length=3pt,width=2.6pt]}, uwsci, line width=0.6pt, densely dashed},
+    fback/.style={-{Latex[length=3pt,width=2.6pt]}, uwgoldD, line width=0.6pt, densely dotted},
+    owner/.style={circle, draw=uwmath, fill=uwmath, minimum size=6pt, inner sep=0pt},
+    member/.style={circle, draw=uwmath, fill=white, minimum size=4.5pt, inner sep=0pt, line width=0.5pt},
+    tag/.style={draw=none, fill=none, text=uwblack, inner xsep=1.5mm, inner ysep=0.4mm, font=\scriptsize},
+    icontile/.style={draw=none, fill=none, text=uwsci, minimum size=11pt, inner sep=0pt, font=\fontsize{7}{7}\selectfont},
+    dcard/.style={draw=uwgreyB, fill=white, rounded corners=1.5pt, line width=0.4pt, minimum width=64pt, minimum height=15pt, inner sep=0pt},
+]
+    \sffamily
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Input: datasets D_1..D_n in an isolated path, each a list of tables, no declared keys
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[panel, minimum width=80pt] (data) at (-20pt, 0pt) {};
+    \node[paneltitle, above=of data.north] (tdata) {Datasets};
+
+    % Catalog-explorer tree: datasets/ > dataset (catalog) > schema > tables
+    % indent grid: level L starts at x0 = -55pt + 9.5pt*L; chevron at x0+0.5, icon at x0+9, name at x0+13.5;
+    % the guide line of a node runs under its icon, so its children's chevrons sit just right of it.
+    \def\rowtxt{\fontsize{5.5}{6}\selectfont\ttfamily}
+    \def\chev#1{\fontsize{4.5}{5}\selectfont#1}
+    \tikzset{guide/.style={uwgreyA!70!uwgreyB, line width=0.4pt}}
+
+    \node[anchor=west, inner sep=0pt, font=\scriptsize] at (-58.5pt, 46pt) {\textcolor{uwgoldD}{\faFolderOpen}\ \texttt{datasets/}};
+    \draw[guide] (-56.5pt, 41pt) -- (-56.5pt, -44pt);
+
+    % D_1 expanded: catalog > schema > tables
+    \node[anchor=west, inner sep=0pt, text=uwgreyC] at (-54.5pt, 36pt) {\chev\faChevronDown};
+    \pic at (-46pt, 36pt) {dbxcatalog=uwsci};
+    \node[anchor=west, inner sep=0pt, text=uwsci] at (-41.5pt, 36pt) {\scriptsize$\boldsymbol{\mathcal{D}_1}$};
+    \draw[guide] (-46pt, 31.5pt) -- (-46pt, -8pt);
+
+    \node[anchor=west, inner sep=0pt, text=uwgreyC] at (-45pt, 27pt) {\chev\faChevronDown};
+    \pic at (-36.5pt, 27pt) {dbxschema=uwsci};
+    \node[anchor=west, inner sep=0pt] at (-32pt, 27pt) {\rowtxt erp};
+    \draw[guide] (-36.5pt, 23pt) -- (-36.5pt, -8pt);
+
+    \foreach \y/\t in {18pt/project, 9pt/ledger, 0pt/timesheet} {
+        \pic at (-27pt, \y) {dbxtable=uwsci};
+        \node[anchor=west, inner sep=0pt] at (-22.5pt, \y) {\rowtxt \t};
+    }
+    \node[anchor=west, inner sep=0pt, text=uwgreyC] at (-30.5pt, -8pt) {\fontsize{4.5}{5}\selectfont\ttfamily + more tables};
+
+    % other datasets collapsed
+    \foreach \y/\lbl/\col in {-18pt/2/uwhealth, -27pt/3/uweng, -44pt/n/uwarts} {
+        \node[anchor=west, inner sep=0pt, text=uwgreyC] at (-54.5pt, \y) {\chev\faChevronRight};
+        \pic at (-46pt, \y) {dbxcatalog=\col};
+        \node[anchor=west, inner sep=0pt, text=\col] at (-41.5pt, \y) {\scriptsize$\boldsymbol{\mathcal{D}_{\lbl}}$};
+    }
+    \node[inner sep=0pt, text=uwgreyC, font=\scriptsize] at (-46pt, -35pt) {$\vdots$};
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (1) Column Profiler
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[panel, minimum width=100pt] (prof) at (95pt, 0pt) {};
+    \node[paneltitle, above=of prof.north] (tprof) {\textcircled{\scriptsize 1} Column Profiler};
+
+    % each profile part: tight box, icon on the left, text centered in the remaining space
+    \foreach \n/\y/\ico/\txt in {
+        sk/36pt/\faHashtag/{\textbf{Value Sketches}\\[-1pt]MinHash, HLL},
+        uq/12pt/\faFingerprint/{\textbf{Uniqueness, Type,}\\[-1pt]\textbf{Value Pattern}},
+        fmt/-12pt/\faBroom/{\textbf{Format}\\[-1pt]\textbf{Normalization}},
+        emb/-36pt/\faVectorSquare/{\textbf{Name + Description}\\[-1pt]\textbf{Embedding}}} {
+        \node[comp, minimum width=88pt, minimum height=16pt, inner sep=0pt] (\n) at (95pt, \y) {};
+        \node[icontile] at ($(\n.west)+(8pt,0pt)$) {\ico};
+        \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(\n.center)+(6pt,0pt)$) {\txt};
+    }
+
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (2) Ring Builder
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[panel, minimum width=160pt] (rb) at (238pt, 0pt) {};
+    \node[paneltitle, above=of rb.north] (trb) {\textcircled{\scriptsize 2} Ring Builder};
+
+    \iconbox{keyc}{198pt}{36pt}{70pt}{\faKey}{\textbf{Key Candidates}\\[-1pt]$u(c) \geq \tau_u$}
+    \iconbox{idx}{278pt}{36pt}{70pt}{\faSearch}{\textbf{Candidate Index}\\[-1pt]LSH + ANN}
+    \iconbox{prune}{238pt}{11pt}{150pt}{\faFilter}{\textbf{Prune} generic and\\[-1pt]type-incompatible columns}
+
+    \draw[flow] (keyc) -- (idx);
+    \draw[flow] (idx.south) -- (idx.south |- prune.north);
+
+    % rings: owner in the center, members on the ring
+    \foreach \cx/\lbl/\nm in {188pt/{$R_1$}/3, 238pt/{$R_2$}/5, 288pt/{$R_k$}/4} {
+        \draw[uwmath, line width=0.6pt, densely dashed] (\cx, -26pt) circle (12pt);
+        \node[owner] at (\cx, -26pt) {};
+        \foreach \i in {1,...,\nm} {
+            \node[member] at ($(\cx, -26pt)+({90+360*\i/\nm}:12pt)$) {};
+        }
+        \node[font=\scriptsize, text=uwmath] at ($(\cx, -26pt)+(0pt,-19pt)$) {\lbl};
+    }
+    \node[font=\scriptsize, text=uwgreyC] at (263pt, -26pt) {$\cdots$};
+    \node[font=\tiny, text=uwgreyC] at (238pt, -52pt) {one ring per key domain: \textcolor{uwmath}{$\bullet$} owner \ \textcolor{uwmath}{$\circ$} member};
+    \foreach \cx in {188pt, 238pt, 288pt} {
+        \draw[flow] (prune.south -| \cx, 0pt) -- (\cx, -12.6pt);
+    }
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (3) Budgeted Verifier
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[panel, minimum width=186pt] (bv) at (423pt, 0pt) {};
+    \node[paneltitle, above=of bv.north] (tbv) {\textcircled{\scriptsize 3} Budgeted Verifier};
+
+    \iconbox[draw=uwsci]{opt}{423pt}{36pt}{174pt}{\faSlidersH}{\textbf{Cost-based Optimizer}\\[-1pt]thresholds, batches}
+    \node[comp, minimum width=76pt, minimum height=24pt, inner sep=0pt] (dist) at (372pt, 4pt) {};
+    \node[icontile] at ($(dist.west)+(8pt,0pt)$) {\faBrain};
+    \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(dist.center)+(6pt,0pt)$) {\textbf{Distilled Model}\\[-1pt]\textcolor{uwenv}{accept} / \textcolor{uwred}{reject}\\[-1pt]\textcolor{uwgoldD}{uncertain}};
+    \node[comp, minimum width=76pt, minimum height=24pt, inner sep=0pt, draw=uwgoldD, fill=uwgoldA!45] (llm) at (474pt, 4pt) {};
+    \node[inner sep=0pt] at ($(llm.west)+(8pt,0pt)$) {\includegraphics[scale=0.9]{img/fig_LLM.pdf}};
+    \node[align=center, inner sep=0pt, font=\ttfamily\scriptsize] at ($(llm.center)+(6pt,0pt)$) {\textbf{Ring Prompt}\\[-1pt]owner, members,\\[-1pt]uncertain};
+    \iconbox{trans}{423pt}{-30pt}{174pt}{\faIcon{share-alt}}{\textbf{Transitive Propagation}\\[-1pt]over confirmed rings}
+
+    \draw[ctrl] (opt.south -| dist.north) -- (dist.north);
+    \draw[ctrl] (opt.south -| llm.north) -- (llm.north);
+    \draw[flow] ($(dist.east)+(0pt,3pt)$) -- node[above, font=\tiny, text=uwgoldD, inner sep=1pt] {uncertain} ($(llm.west)+(0pt,3pt)$);
+    \draw[fback] ($(llm.west)+(0pt,-5pt)$) -- node[below, font=\tiny, text=uwgoldD, inner sep=1pt] {labels} ($(dist.east)+(0pt,-5pt)$);
+    \draw[flow] (dist.south) -- (dist.south |- trans.north);
+    \draw[flow] (llm.south) -- (llm.south |- trans.north);
+
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Output: join graph, a star around each owner
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[panel, minimum width=56pt, fill=white] (outp) at (553pt, 0pt) {};
+    \node[paneltitle, above=of outp.north] (tout) {Join Graph};
+    \coordinate (out) at (553pt, 2pt);
+    \node[owner, minimum size=8pt] (o) at (out) {};
+    \foreach \a in {90, 162, 234, 306, 18} {
+        \node[member, minimum size=6pt] (m\a) at ($(out)+(\a:20pt)$) {};
+        \draw[-{Latex[scale=0.6]}, uwmath, line width=0.6pt] (m\a) -- (o);
+    }
+    \node[font=\scriptsize] at ($(out)+(0pt,-32pt)$) {$G(\mathcal{R})$};
+    \node[font=\tiny, align=center, text=uwgreyC] at ($(out)+(0pt,34pt)$) {star per\\[-1pt]key domain};
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Connections between components: only between the panel titles
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \draw[bigarrow] (tdata.east) -- (tprof.west);
+    \draw[bigarrow] (tprof.east) -- (trb.west);
+    \draw[bigarrow] (trb.east) -- (tbv.west);
+    \draw[bigarrow] (tbv.east) -- (tout.west);
+
+\end{tikzpicture}

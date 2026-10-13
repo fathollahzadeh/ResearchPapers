@@ -1,0 +1,87 @@
+\providecommand{\dbmslogo}[2]{\IfFileExists{figures/img/#1.png}{\raisebox{-0.35ex}{\includegraphics[height=1.7ex]{figures/img/#1.png}}}{#2}}
+\providecommand{\pgLogo}{\dbmslogo{logo_postgresql}{PG}}
+\providecommand{\myLogo}{\dbmslogo{logo_mysql}{My}}
+\providecommand{\dkLogo}{\dbmslogo{logo_duckdb}{Dk}}
+\providecommand{\hlc}[2]{{\setlength{\fboxsep}{1.5pt}\colorbox{#1}{#2}}}
+\providecommand{\heatsw}[1]{{\setlength{\fboxsep}{0pt}\colorbox{#1}{\rule{0pt}{1.3ex}\hspace{1.3ex}}}}
+\providecommand{\heatbar}{\heatsw{red!55}\heatsw{red!33}\heatsw{red!14}\heatsw{blue!14}\heatsw{blue!33}\heatsw{blue!55}}
+\begin{table*}[t]
+\centering
+\caption{End-to-end speedup over the unmodified same-engine host, by workload percentile. Each $p\%$ column is the host-over-system speedup in completing the fastest $p\%$ of the workload; larger percentiles fold in the expensive tail queries where rewriting helps most. Every cell is a triple \textbf{\pgLogo\,/\,\myLogo\,/\,\dkLogo} (PostgreSQL / MySQL / DuckDB); \emph{Med.}\ and \emph{Mean} are the median and mean per-query speedups. Cells are heat-shaded by speedup: slowdown~$<\!1<$~speedup (\,slower~\heatbar~faster\,), darker~=~larger magnitude. \emph{ReSequel} pays an online LLM call per query; \emph{{\sys}} rewrites deterministically at zero online cost. ``--'' = runs not yet available.}
+\vspace{-.3cm}
+\label{tab:e2e}
+\setlength\tabcolsep{4pt}
+\resizebox{0.99\textwidth}{!}{%
+\begin{tabular}{ll ccccccc cc}
+\toprule
+& & \multicolumn{9}{c}{\textbf{Speedup over host}~~(cell:~\pgLogo\,/\,\myLogo\,/\,\dkLogo)} \\
+\cmidrule(lr){3-11}
+\textbf{Workload} & \textbf{System} & \textbf{25\%} & \textbf{50\%} & \textbf{75\%} & \textbf{90\%} & \textbf{95\%} & \textbf{99\%} & \textbf{100\%} & \textbf{Med.} & \textbf{Mean} \\
+\midrule
+\multirow{6}{*}{TPC-H}
+ & ReSequel       & --/\hlc{red!6}{0.99}/\hlc{red!8}{0.92} & --/\hlc{red!8}{0.91}/\hlc{red!8}{0.91} & --/\hlc{blue!18}{1.65}/\hlc{red!8}{0.92} & --/\hlc{blue!17}{1.58}/\hlc{red!8}{0.93} & --/\hlc{blue!16}{1.54}/\hlc{red!7}{0.97} & --/\hlc{red!6}{0.99}/\hlc{red!6}{1.00} & --/\hlc{red!12}{0.78}/\hlc{red!7}{0.96} & --/\hlc{red!9}{0.86}/\hlc{red!8}{0.91} & --/\hlc{blue!10}{1.18}/\hlc{red!8}{0.93} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/\hlc{red!11}{0.79} & --/--/\hlc{red!11}{0.80} & --/--/\hlc{red!12}{0.77} & --/--/\hlc{red!12}{0.78} & --/--/\hlc{red!11}{0.81} & --/--/\hlc{red!12}{0.77} & --/--/\hlc{red!14}{0.71} & --/--/\hlc{red!11}{0.80} & --/--/\hlc{red!11}{0.80} \\
+ & {\sys}          & --/--/\hlc{red!9}{0.87} & --/--/\hlc{red!8}{0.90} & --/--/\hlc{red!9}{0.88} & --/--/\hlc{red!9}{0.90} & --/--/\hlc{red!8}{0.94} & --/--/\hlc{red!7}{0.95} & --/--/\hlc{red!13}{0.75} & --/--/\hlc{red!8}{0.90} & --/--/\hlc{red!9}{0.89} \\
+ & {\sys} (MCTS)   & --/--/\hlc{red!7}{0.97} & --/--/\hlc{red!7}{0.97} & --/--/\hlc{red!8}{0.93} & --/--/\hlc{red!8}{0.91} & --/--/\hlc{red!7}{0.96} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{red!12}{0.77} & --/--/\hlc{red!7}{0.96} & --/--/\hlc{red!8}{0.93} \\
+\midrule
+\multirow{6}{*}{Stats}
+ & ReSequel       & --/\hlc{blue!26}{2.41}/\hlc{blue!17}{1.61} & --/\hlc{blue!28}{2.59}/\hlc{blue!20}{1.80} & --/\hlc{blue!30}{2.80}/\hlc{blue!19}{1.79} & --/\hlc{blue!18}{1.66}/\hlc{blue!33}{3.23} & --/\hlc{blue!35}{3.54}/\hlc{blue!47}{5.82} & --/\hlc{blue!39}{4.13}/\hlc{blue!55}{23.3} & --/\hlc{blue!6}{1.00}/\hlc{blue!55}{19.1} & --/\hlc{blue!22}{1.96}/\hlc{blue!15}{1.45} & --/\hlc{blue!14}{1.43}/\hlc{blue!40}{4.29} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/\hlc{blue!7}{1.06} & --/--/\hlc{blue!9}{1.13} & --/--/\hlc{blue!10}{1.20} & --/--/\hlc{blue!9}{1.12} & --/--/\hlc{blue!8}{1.10} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{red!6}{0.99} & --/--/\hlc{blue!8}{1.08} & --/--/\hlc{blue!8}{1.07} \\
+ & {\sys}          & --/--/\hlc{blue!18}{1.68} & --/--/\hlc{blue!20}{1.81} & --/--/\hlc{blue!22}{2.00} & --/--/\hlc{blue!34}{3.39} & --/--/\hlc{blue!45}{5.37} & --/--/\hlc{blue!55}{21.1} & --/--/\hlc{blue!55}{18.1} & --/--/\hlc{blue!12}{1.32} & --/--/\hlc{blue!39}{4.13} \\
+ & {\sys} (MCTS)   & --/--/\hlc{blue!16}{1.55} & --/--/\hlc{blue!18}{1.71} & --/--/\hlc{blue!22}{1.99} & --/--/\hlc{blue!33}{3.24} & --/--/\hlc{blue!36}{3.61} & --/--/\hlc{blue!55}{18.4} & --/--/\hlc{blue!55}{25.8} & --/--/\hlc{blue!14}{1.41} & --/--/\hlc{blue!38}{4.01} \\
+\midrule
+\multirow{6}{*}{Stats-CEB}
+ & ReSequel       & --/\hlc{blue!34}{3.31}/\hlc{blue!19}{1.74} & --/\hlc{blue!32}{3.04}/\hlc{blue!20}{1.87} & --/\hlc{blue!34}{3.32}/\hlc{blue!23}{2.06} & --/\hlc{blue!27}{2.52}/\hlc{blue!38}{3.92} & --/\hlc{blue!25}{2.24}/\hlc{blue!45}{5.33} & --/\hlc{blue!46}{5.55}/\hlc{blue!55}{21.7} & --/\hlc{blue!7}{1.05}/\hlc{blue!55}{18.3} & --/\hlc{blue!41}{4.55}/\hlc{blue!14}{1.43} & --/\hlc{blue!20}{1.86}/\hlc{blue!39}{4.24} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/\hlc{blue!8}{1.09} & --/--/\hlc{blue!10}{1.19} & --/--/\hlc{blue!8}{1.07} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.16} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{red!7}{0.97} & --/--/1.00 & --/--/\hlc{blue!8}{1.08} \\
+ & {\sys}          & --/--/\hlc{blue!21}{1.93} & --/--/\hlc{blue!22}{1.99} & --/--/\hlc{blue!25}{2.25} & --/--/\hlc{blue!41}{4.56} & --/--/\hlc{blue!42}{4.69} & --/--/\hlc{blue!55}{17.7} & --/--/\hlc{blue!55}{17.6} & --/--/\hlc{blue!16}{1.51} & --/--/\hlc{blue!39}{4.26} \\
+ & {\sys} (MCTS)   & --/--/\hlc{blue!20}{1.86} & --/--/\hlc{blue!21}{1.91} & --/--/\hlc{blue!24}{2.18} & --/--/\hlc{blue!38}{4.06} & --/--/\hlc{blue!37}{3.80} & --/--/\hlc{blue!55}{16.6} & --/--/\hlc{blue!55}{25.9} & --/--/\hlc{blue!16}{1.56} & --/--/\hlc{blue!39}{4.24} \\
+\midrule
+\multirow{6}{*}{DSB}
+ & ReSequel       & --/--/\hlc{blue!6}{1.01} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{red!7}{0.96} & --/--/\hlc{red!7}{0.96} & --/--/\hlc{red!8}{0.91} & --/--/\hlc{red!8}{0.91} & --/--/\hlc{red!8}{0.93} & --/--/\hlc{blue!6}{1.02} & --/--/\hlc{blue!6}{1.01} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & {\sys}          & --/--/\hlc{blue!7}{1.05} & --/--/\hlc{blue!8}{1.11} & --/--/\hlc{blue!9}{1.16} & --/--/\hlc{blue!9}{1.16} & --/--/\hlc{blue!7}{1.06} & --/--/\hlc{blue!7}{1.05} & --/--/\hlc{blue!8}{1.08} & --/--/\hlc{blue!9}{1.13} & --/--/\hlc{blue!8}{1.08} \\
+ & {\sys} (MCTS)   & --/--/\hlc{blue!15}{1.48} & --/--/\hlc{blue!12}{1.31} & --/--/\hlc{blue!9}{1.13} & --/--/\hlc{blue!9}{1.13} & --/--/\hlc{blue!8}{1.07} & --/--/\hlc{blue!7}{1.06} & --/--/\hlc{blue!7}{1.06} & --/--/\hlc{blue!13}{1.36} & --/--/\hlc{blue!11}{1.27} \\
+\midrule
+\multirow{6}{*}{JOB}
+ & ReSequel       & --/\hlc{red!6}{0.99}/\hlc{blue!8}{1.08} & --/\hlc{blue!7}{1.07}/\hlc{blue!8}{1.09} & --/\hlc{blue!8}{1.11}/\hlc{red!6}{0.98} & --/\hlc{blue!7}{1.06}/\hlc{red!6}{0.98} & --/\hlc{blue!7}{1.06}/\hlc{red!10}{0.83} & --/\hlc{blue!7}{1.06}/\hlc{red!9}{0.87} & --/\hlc{red!55}{0.01}/\hlc{red!7}{0.96} & --/\hlc{red!7}{0.95}/\hlc{blue!10}{1.16} & --/\hlc{red!26}{0.42}/\hlc{blue!7}{1.05} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/\hlc{red!42}{0.21} & --/--/\hlc{red!41}{0.22} & --/--/\hlc{red!45}{0.19} & --/--/\hlc{red!46}{0.17} & --/--/\hlc{red!47}{0.17} & --/--/\hlc{red!55}{0.01} & --/--/\hlc{red!55}{0.00} & --/--/\hlc{red!42}{0.21} & --/--/\hlc{red!55}{0.02} \\
+ & {\sys}          & --/--/\hlc{blue!8}{1.08} & --/--/\hlc{blue!8}{1.10} & --/--/\hlc{blue!7}{1.04} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{red!6}{0.98} & --/--/\hlc{blue!7}{1.04} & --/--/\hlc{red!6}{0.99} & --/--/\hlc{blue!8}{1.09} & --/--/\hlc{blue!7}{1.06} \\
+ & {\sys} (MCTS)   & --/--/\hlc{blue!7}{1.04} & --/--/\hlc{blue!9}{1.13} & --/--/\hlc{blue!8}{1.09} & --/--/\hlc{red!7}{0.95} & --/--/\hlc{red!7}{0.95} & --/--/\hlc{red!6}{1.00} & --/--/\hlc{blue!7}{1.02} & --/--/\hlc{blue!9}{1.12} & --/--/\hlc{blue!7}{1.03} \\
+\midrule
+\multirow{6}{*}{IMDB Full}
+ & ReSequel       & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!9}{1.14} & --/--/\hlc{blue!11}{1.24} & --/--/\hlc{blue!10}{1.18} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!28}{0.39} & --/--/\hlc{red!32}{0.33} & --/--/\hlc{red!29}{0.37} \\
+ & {\sys}          & --/\hlc{blue!22}{1.96}/\hlc{blue!8}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!9}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!9}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!8}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!8}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!9}{1.11} & --/\hlc{blue!22}{1.96}/\hlc{blue!9}{1.11} & --/\hlc{blue!12}{1.32}/\hlc{blue!8}{1.10} & --/\hlc{blue!14}{1.38}/\hlc{blue!9}{1.13} \\
+ & {\sys} (MCTS)   & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!9}{1.15}/\hlc{blue!10}{1.19} & --/\hlc{blue!12}{1.30}/\hlc{blue!9}{1.13} & --/\hlc{blue!11}{1.22}/\hlc{blue!10}{1.19} \\
+\midrule
+\multirow{6}{*}{JOB-Complex}
+ & ReSequel       & \hlc{blue!15}{1.48}/--/\hlc{red!18}{0.59} & \hlc{blue!26}{2.40}/--/\hlc{blue!10}{1.18} & \hlc{blue!27}{2.45}/--/\hlc{blue!8}{1.11} & \hlc{blue!34}{3.42}/--/\hlc{red!9}{0.89} & \hlc{blue!39}{4.25}/--/\hlc{red!7}{0.97} & \hlc{blue!50}{6.61}/--/\hlc{red!7}{0.97} & \hlc{blue!55}{23.7}/--/\hlc{red!7}{0.98} & \hlc{blue!26}{2.37}/--/\hlc{blue!10}{1.18} & \hlc{blue!41}{4.51}/--/\hlc{red!7}{0.94} \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & {\sys}          & \hlc{blue!30}{2.85}/\hlc{blue!12}{1.27}/-- & \hlc{blue!13}{1.35}/\hlc{red!6}{0.99}/-- & \hlc{blue!9}{1.14}/\hlc{red!6}{1.00}/-- & \hlc{blue!15}{1.45}/\hlc{blue!48}{6.14}/-- & \hlc{blue!25}{2.31}/\hlc{blue!44}{5.30}/-- & \hlc{blue!7}{1.03}/\hlc{blue!27}{2.49}/-- & \hlc{blue!34}{3.30}/\hlc{blue!25}{2.24}/-- & \hlc{blue!12}{1.32}/\hlc{blue!8}{1.11}/-- & \hlc{blue!18}{1.70}/\hlc{blue!34}{3.33}/-- \\
+ & {\sys} (MCTS)   & \hlc{blue!30}{2.79}/\hlc{blue!11}{1.26}/-- & \hlc{blue!13}{1.36}/\hlc{red!7}{0.98}/-- & \hlc{blue!9}{1.16}/\hlc{blue!6}{1.01}/-- & \hlc{blue!16}{1.56}/\hlc{blue!48}{6.14}/-- & \hlc{blue!25}{2.31}/\hlc{blue!44}{5.29}/-- & \hlc{blue!7}{1.03}/\hlc{blue!27}{2.50}/-- & \hlc{blue!34}{3.31}/\hlc{blue!25}{2.24}/-- & \hlc{blue!13}{1.34}/\hlc{blue!9}{1.13}/-- & \hlc{blue!19}{1.75}/\hlc{blue!34}{3.33}/-- \\
+\midrule
+\multirow{6}{*}{StackOverflow}
+ & ReSequel       & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LLM-R2         & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & R-Bot          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & LearnedRewrite & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & {\sys}          & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+ & {\sys} (MCTS)   & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- & --/--/-- \\
+\bottomrule
+\end{tabular}}
+\vspace{-0.35cm}
+\end{table*}

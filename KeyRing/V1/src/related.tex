@@ -1,0 +1,163 @@
+\section{Background and Problem Formulation}
+\label{sec:background}
+In this section, we review the three categories of join discovery from Table~\ref{tab:intro-landscape}: non-LLM, LLM-based, and hybrid.
+For each category, we describe how it decides joins and where it falls short on enterprise databases.
+We then formalize cost-bounded join key discovery.
+
+\subsection{Non-LLM Join Discovery}
+\label{sec:bg_nonllm}
+Non-LLM methods decide joins from data statistics and schema metadata.
+They fall into two groups: key and inclusion-dependency discovery, which decides joins inside one database, and joinable-table search, which ranks candidate columns for a query column in a data lake.
+
+\introparagraph{Key and Inclusion-Dependency Discovery} A unary \emph{inclusion dependency} (IND) $A \subseteq B$ holds if every value of column $A$ also appears in column $B$.
+If $B$ is also unique, then $A$ is a foreign-key candidate that references $B$.
+IND discovery algorithms check this condition for all column pairs, and scale to databases with very many tables by sorting and sharing value sets across checks~\cite{Tschirschnitz17}.
+Real data rarely satisfies exact INDs, so approximate INDs relax the condition to a containment threshold.
+Every IND is only a candidate, and most candidates are not foreign keys.
+Learned detectors therefore rank candidates with features, such as the uniqueness of $B$, the containment of $A$ in $B$, the similarity of column names, and the distribution of values~\cite{Rostin09,ZhangHOPS10}.
+HoPF~\cite{HoPF} detects primary and foreign keys together, so that a column chosen as a primary key constrains which foreign keys may reference it.
+Auto-BI~\cite{AutoBI} goes one step further.
+It first trains a local classifier that predicts, for each column pair, whether it is an N:1 join.
+It then selects a global join graph that maximizes the combined classifier scores under structural constraints, a variant of the minimum-cost arborescence problem.
+The global step removes many locally plausible but inconsistent joins.
+
+\introparagraph{Joinable-Table Search} Data lake systems treat each column as a \emph{domain}, the set of its distinct values, and rank the columns of a lake by their overlap with a query column.
+LSH Ensemble~\cite{DBLP:journals/pvldb/ZhuNPM16} uses set containment $|Q \cap X| / |Q|$ as the overlap measure.
+Unlike Jaccard similarity, containment does not penalize a large domain $X$ for values outside $Q$, which matters because domain sizes follow a power-law distribution.
+LSH Ensemble indexes MinHash sketches of all domains in partitions of similar size, and answers containment queries over hundreds of millions of domains in seconds.
+JOSIE~\cite{DBLP:conf/sigmod/ZhuDNM19} returns the exact top-$k$ columns by set overlap and chooses between reading posting lists and reading candidate sets with a cost model.
+MATE~\cite{MATE} extends the search to multi-column keys.
+DeepJoin~\cite{2023_dong_deepjoin} embeds columns with a pre-trained language model and searches them with an approximate nearest-neighbor index, which also finds joins with similar but not identical values.
+Freyja~\cite{Freyja} learns a join quality metric from column profiles instead of raw values.
+
+\introparagraph{Limitations} Non-LLM methods are cheap, but they decide joins from syntactic evidence, and enterprise databases defeat this evidence in four ways.
+First, accidental overlap creates false joins.
+Surrogate keys that count from 1, status codes, years, and flags are contained in each other, and a unique surrogate column looks like a valid target for all of them.
+LakeBench~\cite{LakeBench} shows the same problem for joinable-table search: a column of street names overlaps a query column of last names, and JOSIE ranks it among the top results although the two columns are not joinable.
+Second, real joins look imperfect.
+Staging tables, snapshots, and deleted rows make containment partial, and formatting differences make exact overlap zero.
+On LakeBench queries whose joins have only fuzzy overlap, JOSIE reaches 0\% top-10 accuracy and DeepJoin reaches 33\%~\cite{LakeBench}.
+LakeBench concludes that no method is effective in all cases, because joinable columns must both mean the same thing and overlap in value~\cite{LakeBench}.
+Third, names do not resolve meaning.
+One key appears under different names, and different keys share generic names such as \texttt{ID}, \texttt{CODE}, or \texttt{DATA}.
+Column descriptions and business context would resolve these cases, but these methods do not read them.
+Fourth, learned models need labels.
+The detectors and Auto-BI learn from labeled joins, and labels for a new enterprise schema are expensive: LakeBench spent more than 7,500 human hours to label its queries~\cite{LakeBench}.
+Joinable-table search, in turn, returns a ranked list per query column, not a join decision with a key direction.
+
+\subsection{LLM-based Join Discovery}
+\label{sec:bg_llm}
+LLMs decide what columns mean.
+Foundation models match entities and schema elements across tables without task-specific training~\cite{dataWrangleNarayan2022}, and they read names, descriptions, and sample values together.
+This resolves the cases that defeat non-LLM methods: an LLM recognizes that \texttt{ENGAGEMENT} holds project codes, that a surrogate \texttt{ID} does not reference a status table, and that a street name is not a last name.
+
+\introparagraph{All-Pairs Prompting} Current practice in enterprise data platforms, including the production pipeline we study, discovers joins in three LLM steps.
+First, the LLM annotates every table: it tags its columns with semantic types and writes a description.
+Second, it groups related tables into \emph{concepts}, which are clusters of tables with overlapping data or a shared business topic.
+Third, it discovers joins: for each pair of tables or concepts, a prompt contains both schemas, their annotations, and sample rows, and the LLM decides whether the pair joins and returns the key columns.
+The first two steps make one LLM call per table or per batch of tables, so their cost is linear in the number of tables.
+The third step dominates the cost.
+
+\introparagraph{Limitations} All-pairs prompting is accurate, but it faces three limitations.
+First, its cost grows quadratically.
+A database with $n$ tables needs $n(n-1)/2$ calls, about 50M calls for 10K tables, and each call carries two schemas and sample rows.
+In our databases, only \todo{Z}\% of the pairs join, so almost all calls return ``no join''.
+Second, its calls are redundant.
+If $k$ tables reference one key, the LLM answers $O(k^2)$ questions whose answers follow from $k$ references to the owner of the key.
+Third, its answers are independent, so nothing makes them consistent.
+The LLM may confirm that $A$ joins $B$ and $B$ joins $C$ on the same key but reject that $A$ joins $C$.
+It also cannot see global evidence that is obvious across pairs: in one of our databases, it linked a generic column named \texttt{DATA} to \todo{1,826} other columns, one pair at a time.
+The resulting join graph contains cliques of redundant edges and false edges that are hard to remove afterwards.
+
+\subsection{Hybrid Join Discovery}
+\label{sec:bg_hybrid}
+Hybrid methods combine cheap methods with the LLM to cut the number of LLM calls.
+They either narrow the search space before the LLM, or route each candidate to a cheap proxy or to the LLM.
+
+\introparagraph{Narrowing the Search Space} Schuyler~\cite{Schuyler} clusters the tables of a relational database into topics.
+It fine-tunes a language model with a triplet loss on self-supervised signals from the schema, embeds each table, and clusters the embeddings, without labeled data.
+Its authors note that such clusters reduce the search for joinable and unionable tables, because integration can match groups before matching tables.
+The concept step of all-pairs prompting follows the same idea.
+Magneto~\cite{Magneto} narrows schema matching between two tables: a small language model retrieves candidate column matches, and an LLM reranks them.
+
+\introparagraph{Routing Candidates} LLM-powered data processing systems, such as LOTUS~\cite{LOTUS} and Palimpzest~\cite{Palimpzest}, provide a \emph{semantic join}: a join of two tables whose condition is a natural-language predicate evaluated by an LLM on each pair of records.
+To avoid evaluating the full cross product, they use a \emph{model cascade}~\cite{FrugalGPT}.
+A cheap proxy, typically the cosine similarity of record embeddings, scores each pair.
+Pairs with a low score are rejected, pairs with a high score are accepted, and only pairs in between go to the LLM.
+SUPG~\cite{SUPG} and BARGAIN~\cite{BARGAIN} set the two thresholds from a sample of LLM labels, so that the output reaches a target precision or recall of the all-LLM result with probability at least $1-\delta$.
+The savings depend on the proxy.
+When embeddings do not encode the join condition, most pairs fall between the thresholds: on real-world documents, BARGAIN still defers about 80\% of pairs to the LLM~\cite{FDJ}.
+Featurized-Decomposition Join (FDJ)~\cite{FDJ} replaces the single proxy with a \emph{featurized decomposition}.
+An LLM extracts features from each record in one linear pass, such as dates, locations, and names.
+A logical expression in conjunctive normal form over cheap comparisons of these features then prunes non-matching pairs, with thresholds set to keep statistical guarantees.
+FDJ reduces cost by up to $10\times$ over BARGAIN~\cite{FDJ}.
+
+\introparagraph{Limitations} Hybrids reduce the cost per pair, but they fall short for join discovery in two ways.
+First, their cheap stage inherits the failures of non-LLM methods.
+Topical clusters are not key domains: a customer or project key is referenced from every topic, so a search restricted to clusters loses joins, and a search across clusters returns to a quadratic number of pairs.
+A proxy based on overlap or embeddings passes accidental overlaps to the LLM and drops joins whose values do not overlap before the LLM sees them.
+Second, semantic join operators answer a different question.
+They evaluate a \emph{given} predicate over the records of \emph{two given} tables.
+Join discovery must find which of thousands of tables join and on which columns.
+Applied to table or column pairs, a semantic join still judges every pair independently.
+It does not use the structure of join keys: the referenced side is unique, the referencing side is contained in it, and many tables share one key.
+FDJ shows that linear per-record extraction can replace quadratic per-pair decisions.
+\ourmethod applies this principle to schemas, with key domains as the extracted structure.
+
+\subsection{Problem Formulation}
+\label{sec:problem}
+Let $\mathcal{D}$ be a database with tables $\mathcal{T} = \{T_1, \ldots, T_n\}$, and let $\mathcal{C}$ be the set of all their columns.
+Each column $c \in \mathcal{C}$ has a name, an optional LLM annotation (semantic type and description), and a set of values $V(c)$.
+We write $u(c) = |\mathrm{distinct}(V(c))| / |V(c)|$ for its uniqueness, and $\mathrm{cont}(a, b) = |V(a) \cap V(b)| / |V(a)|$ for the containment of $a$ in $b$.
+
+\begin{definition}[Join Key]
+A \emph{join key} $a \rightarrow b$ is an ordered pair of columns $a, b \in \mathcal{C}$ of different tables, where $b$ identifies a business entity and $a$ refers to the same entity.
+We call $b$ the \emph{referenced} column and $a$ the \emph{referencing} column.
+\end{definition}
+
+The definition is semantic on purpose.
+Uniqueness and containment are evidence for a join key, but neither is necessary nor sufficient on enterprise data, as Section~\ref{sec:bg_nonllm} shows.
+We therefore define the ground truth by an oracle.
+
+\begin{definition}[LLM Oracle]
+An \emph{oracle} $\mathcal{O}$ is an LLM with a fixed prompt that, given two tables, returns the set of join keys between them.
+The oracle join set $J^* = \bigcup_{i<j} \mathcal{O}(T_i, T_j)$ is the result of all-pairs prompting.
+Computing $J^*$ costs $n(n-1)/2$ oracle calls.
+\end{definition}
+
+Using the oracle as the reference makes the goal precise: a cheaper method should return what all-pairs prompting would return, at a fraction of its cost.
+It also matches how such systems are evaluated in practice, where the all-LLM result is the reference for cascades~\cite{SUPG,BARGAIN,FDJ}.
+We additionally report precision and recall against human-labeled joins on a sample (Section~\ref{sec:experiments}).
+
+\begin{definition}[Key Domain and Ring]
+A \emph{key domain} is a business entity that columns refer to, such as a customer or a project.
+A \emph{ring} $R = (o_R, M_R)$ represents one key domain by an \emph{owner} column $o_R \in \mathcal{C}$ that identifies the entity, and a set of \emph{member} columns $M_R \subseteq \mathcal{C} \setminus \{o_R\}$ that refer to it.
+A ring induces the join keys $J(R) = \{ m \rightarrow o_R \mid m \in M_R \}$.
+A set of rings $\mathcal{R}$ induces the join graph $G(\mathcal{R})$ with edges $\bigcup_{R \in \mathcal{R}} J(R)$.
+\end{definition}
+
+Two members of the same ring also join with each other, through their shared owner.
+$G(\mathcal{R})$ does not store these joins as edges, because they follow by transitivity.
+So a key referenced by $k$ columns produces $k$ edges in $G(\mathcal{R})$, a star around its owner, instead of the $O(k^2)$ edges of a clique.
+
+\introparagraph{Cost Model} Let $\mathrm{cost}(P)$ be the cost of an LLM prompt $P$, measured in tokens and converted to dollars by the price of the model.
+A method $\mathcal{A}$ issues a sequence of prompts $P_1, \ldots, P_m$ and returns a join set $\hat{J}$.
+Its LLM cost is $\mathrm{cost}(\mathcal{A}) = \sum_{i=1}^{m} \mathrm{cost}(P_i)$.
+We also report its number of LLM calls $m$ and its end-to-end time, including profiling and all non-LLM steps.
+The recall of $\hat{J}$ with respect to the oracle is $\mathrm{rec}(\hat{J}) = |\hat{J} \cap J^*| / |J^*|$, where a member-to-member join implied by a ring counts as found.
+
+\introparagraph{Optimization Objective} Given $\mathcal{D}$, an oracle $\mathcal{O}$, a recall target $\gamma \in (0, 1]$, and a confidence level $1-\delta$, find a set of rings $\mathcal{R}$, and thereby a join set $\hat{J} = G(\mathcal{R})$, that minimizes the LLM cost:
+\begin{equation}
+\min_{\mathcal{A}} \ \mathrm{cost}(\mathcal{A}) \quad \text{s.t.} \quad \Pr\left[\mathrm{rec}(\hat{J}) \geq \gamma\right] \geq 1 - \delta,
+\end{equation}
+subject to four requirements.
+\begin{itemize}[leftmargin=*]
+\item \emph{(R1) Recall-guaranteed:} $\hat{J}$ keeps at least a fraction $\gamma$ of the oracle joins with probability at least $1-\delta$, where the probability is over the random samples the method draws.
+\item \emph{(R2) Domain-proportional:} the number of LLM calls grows with the number of key domains and uncertain candidates, not with the number of table pairs.
+\item \emph{(R3) Label-free:} the method needs no labeled joins and no corpus of similar schemas. It may learn only from the oracle answers it pays for.
+\item \emph{(R4) Consistent:} $\hat{J}$ is induced by rings, so every referencing column points to the owner of its key domain, and joins implied by transitivity are not stored as separate edges.
+\end{itemize}
+A precision constraint can be added in the same form; we report precision for all methods.
+In Table~\ref{tab:intro-landscape}, non-LLM methods meet R2 and R4 at best but have no oracle-level semantics, and Auto-BI violates R3.
+All-pairs prompting is the oracle itself and violates R2 and R4.
+Hybrid semantic joins meet R1 and R3 for a given pair of tables, but applied to join discovery they violate R2 and R4.

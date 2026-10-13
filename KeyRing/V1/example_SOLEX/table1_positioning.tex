@@ -1,0 +1,54 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.35}
+\caption{Specializing optimization to an evolving workload: host
+optimizers have fixed rules, LLM rewriters call the LLM per new
+template, synthesis bypasses the engine; {\sys} calls the LLM only
+offline, on a sample, and reuses rules.}
+\vspace{-4mm}
+\label{tab:intro-landscape}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}p{1.6cm}YYY>{\columncolor{sysbg}}Y@{}}
+\toprule
+ & \textbf{Host DBMS}\newline general-purpose
+ & \textbf{ReSequel}\newline LLM rewriter~\cite{resequel}
+ & \textbf{BespokeOLAP}\newline synthesis~\cite{bespokeolap}
+ & \textbf{\sys}\newline ours \\
+\midrule
+\textbf{Specialized to the workload}
+ & \xmark{} fixed rules
+ & \cmark
+ & \cmark
+ & \cmark \\
+\cmidrule{1-5}
+\textbf{LLM calls grow with}
+ & n/a
+ & \xmark{} new templates
+ & \xmark{} new templates, via re-synthesis
+ & \cmark{} the sample, not future queries \\
+\cmidrule{1-5}
+\textbf{Reuses on new queries}
+ & n/a
+ & \xmark{} identical template only
+ & \xmark{} fallback or re-synthesis
+ & \cmark{} shared fragments \\
+\cmidrule{1-5}
+\textbf{Keeps engine layers}
+ & \cmark
+ & \cmark
+ & \xmark{} re-implements parallelism, memory; read-only
+ & \cmark{} rewrites logical plan only \\
+\cmidrule{1-5}
+% TODO(Saeed): fill this row from Table 5 (tbl:cost); ReSequel was not run on CEB, so use the workload Table 5 reports for it, or "per template".
+\textbf{Cost to specialize} (16 CEB templates)
+ & n/a
+ & \$2, 35\,min
+ & \$303, 10--30\,h
+ & \$0--\$8, 0--1.5\,min; \$0 when rules are reused \\
+\bottomrule
+\end{tabularx}
+\vspace{-5mm}
+\end{table}

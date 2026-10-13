@@ -1,0 +1,139 @@
+\newcommand{\bitem}{\fontsize{3}{3}\selectfont\ding{110} \tiny}
+\newcommand{\midarrow}{\tikz \draw[-triangle 90] (0,0) -- +(.1,0);}
+
+\begin{tikzpicture}[
+    node distance=-0.1mm,  
+    font=\tiny, line width=0.2pt,  
+    textstylesys/.style={font=\tiny, inner sep=0.3mm, minimum width=71pt, text width=71pt,fill=none,draw=none}
+]
+%%% Chunk 1
+\node[textstylesys, fill=lightgray!10, minimum height=21.7pt] (sys-rules-1) {\shortstack[l]{
+\texttt{\textbf{\#} Generate Python Pipeline} \\
+\texttt{\textbf{\#} Import Libs \& Modules} \\
+\texttt{\textbf{\#} \textcolor{tug}{Preprocessing}}}};
+
+\node[textstylesys, below=of sys-rules-1, fill=tugb!10, minimum height=46pt] (cat-data-1) {\shortstack[l]{
+    \texttt{\textbf{\#} Dataset Description} \\
+    \texttt{\textbf{\# Schema \& Metadata:}} \\
+    \texttt{\quad \bitem col$_1$ [metadata ...]} \\
+    \texttt{\quad \bitem col$_2$ [metadata ...]} \\
+    \texttt{\quad \bitem ...} \\ 
+    \texttt{\quad \bitem col$_{\lceil\frac{n}{\beta}\rceil}$ [metadata ...] \vspace{-1pt}}
+}};
+
+\node[textstylesys, left=of sys-rules-1, rotate=90,anchor=south, align=center, minimum width=19.7pt, text width=19.7pt, minimum height=7.5pt, fill=lightgray!20, draw=lightgray, xshift=0pt](sys-title-1){\textbf{\tiny{\texttt{Rules}}}};
+
+\node[textstylesys, left=of cat-data-1, rotate=90,anchor=south,align=left, minimum width=44pt, text width=44pt, minimum height=7.5pt, fill=tugb!20, draw=tugb, yshift=0mm, xshift=0pt](cat-title){\textbf{\tiny{\texttt{Catalog Data}}}};
+
+\node[inner sep=0mm,minimum width=3pt, minimum height=4pt, fill=black] (chain-0) at ($(cat-data-1.south east)+(-1.5pt,2pt)$) {};
+
+\node[textstylesys, fill=lightgray!10, below=of cat-data-1, yshift=-10pt, minimum height=21.7pt] (sys-rules-2) {\shortstack[l]{
+\texttt{\textbf{\#} Generate Python Pipeline} \\
+\texttt{\textbf{\#} Import Libs \& Modules} \\
+\texttt{\textbf{\#} \textcolor{tug}{Fe. Engineering \& Selection}}}};
+
+\node[textstylesys, below=of sys-rules-2, fill=tugb!10, minimum height=45pt] (cat-data-2) {\shortstack[l]{
+    \texttt{\textbf{\#} Dataset Description} \\
+    \texttt{\textbf{\#} \texttt{\underline{<CODE> src chain \#2 </CODE>}}} \\
+    \texttt{\textbf{\# Schema \& Metadata:}} \\
+    \texttt{\quad \bitem col$_1$ [metadata ...]} \\
+    \texttt{\quad \bitem ...} \\ 
+    \texttt{\quad \bitem col$_{\lceil\frac{n}{\beta}\rceil}$ [metadata ...] \vspace{-1pt}}
+}};
+
+\node[textstylesys, left=of sys-rules-2, rotate=90,anchor=south, align=center, minimum width=19.7pt, text width=19.7pt, minimum height=7.5pt, fill=lightgray!20, draw=lightgray, xshift=0pt](sys-title){\textbf{\tiny{\texttt{Rules}}}};
+
+\node[textstylesys, left=of cat-data-2, rotate=90,anchor=south,align=left, minimum width=43pt, text width=43pt, minimum height=7.5pt, fill=tugb!20, draw=tugb, yshift=0mm, xshift=0pt](cat-title){\textbf{\tiny{\texttt{Catalog Data}}}};
+
+\filldraw[draw=gray, line width=0.5pt, fill=none, rounded corners, densely dotted] ($(sys-title-1.south east)+(-10pt,2pt)$)  rectangle  ($(cat-data-2.south east)+(2pt,-2pt)$); 
+\node[textstylesys, above=of sys-title-1.south, text=gray, xshift=55pt, yshift=13pt] {\textbf{\texttt{Prompt Chain 1}}};
+\node[inner sep=0mm,minimum width=3pt, minimum height=4pt, fill=black] (chain-1) at ($(cat-data-2.south east)+(-1.5pt,2pt)$) {};
+
+%%% Chunk 2
+\node[textstylesys, fill=lightgray!10, right=of sys-rules-1, xshift=30pt, minimum height=21.7] (sys-rules-2) {\shortstack[l]{
+\texttt{\textbf{\#} Generate Python Pipeline} \\
+\texttt{\textbf{\#} Import Libs \& Modules} \\
+\texttt{\textbf{\#} \textcolor{tug}{Preprocessing}}}};
+
+\node[textstylesys, below=of sys-rules-2, fill=tugb!10, minimum height=46pt] (cat-data-2) {\shortstack[l]{
+    \texttt{\textbf{\#} Dataset Description} \\
+    \texttt{\textbf{\#} \texttt{\underline{<CODE> src chain \#1 </CODE>}}} \\
+    \texttt{\textbf{\# Schema \& Metadata:}} \\
+    \texttt{\quad \bitem col$_{\lceil\frac{n}{\beta}\rceil+1}$ [metadata ...]}\\
+    \texttt{\quad \bitem ...} \vspace{1.5pt}\\
+    \texttt{\quad \bitem col$_n$ [metadata ...]}
+}};
+
+\node[textstylesys, left=of sys-rules-2, rotate=90,anchor=south, align=center, minimum width=19.7pt, text width=19.7pt, minimum height=7.5pt, fill=lightgray!20, draw=lightgray, xshift=0pt](sys-title-1){\textbf{\tiny{\texttt{Rules}}}};
+
+\node[textstylesys, left=of cat-data-2, rotate=90,anchor=south,align=left, minimum width=45pt, text width=45pt, minimum height=7.5pt, fill=tugb!20, draw=tugb, yshift=0mm, xshift=0pt](cat-title-2){\textbf{\tiny{\texttt{Catalog Data}}}};
+\node[inner sep=0mm,minimum width=3pt, minimum height=4pt, fill=black] (chain-2) at ($(cat-data-2.south east)+(-1.5pt,2pt)$) {};
+
+\node[textstylesys, fill=lightgray!10, below=of cat-data-2, yshift=-10pt,minimum height=21.7pt] (sys-rules-2) {\shortstack[l]{
+\texttt{\textbf{\#} Generate Python Pipeline} \\
+\texttt{\textbf{\#} Import Libs \& Modules} \\
+\texttt{\textbf{\#} \textcolor{tug}{Fe. Engineering \& Selection}}}};
+
+\node[textstylesys, below=of sys-rules-2, fill=tugb!10, minimum height=46pt] (cat-data-2) {\shortstack[l]{
+    \texttt{\textbf{\#} Dataset Description} \\
+    \texttt{\textbf{\#}  \texttt{\underline{<CODE> src chain \#1 </CODE>}}} \\
+    \texttt{\textbf{\# Schema \& Metadata:}} \\
+    \texttt{\quad \bitem col$_{\lceil\frac{n}{\beta}\rceil+1}$ [metadata ...]}\\
+    \texttt{\quad \bitem ...} \vspace{1.5pt}\\
+    \texttt{\quad \bitem col$_n$ [metadata ...]}
+}};
+
+\node[textstylesys, left=of sys-rules-2, rotate=90,anchor=south, align=center, minimum width=19.7pt, text width=19.7pt, minimum height=7.5pt, fill=lightgray!20, draw=lightgray, xshift=0pt](sys-title-2){\textbf{\tiny{\texttt{Rules}}}};
+
+\node[textstylesys, left=of cat-data-2, rotate=90,anchor=south,align=left, minimum width=45pt, text width=45pt, minimum height=7.5pt, fill=tugb!20, draw=tugb, yshift=0mm, xshift=0pt](cat-title-2){\textbf{\tiny{\texttt{Catalog Data}}}};
+
+\filldraw[draw=gray, line width=0.5pt, fill=none, rounded corners, densely dotted] ($(sys-title-1.south east)+(-10pt,2pt)$)  rectangle  ($(cat-data-2.south east)+(2pt,-2pt)$); 
+\node[textstylesys, above=of sys-title-1.south, text=gray, xshift=55pt, yshift=13pt] {\textbf{\texttt{Prompt Chain 2}}};
+\node[inner sep=0mm,minimum width=3pt, minimum height=4pt, fill=black] (chain-3) at ($(cat-data-2.south east)+(-1.5pt,2pt)$) {};
+
+%%% Chunk Model Selection
+\node[textstylesys, fill=lightgray!10, right=of cat-data-2, xshift=30pt, yshift=50pt, minimum width=110pt, text width=110pt, minimum height=41pt] (sys-rules-3) {\shortstack[l]{
+\texttt{\textbf{\#} Generate Python Pipeline} \\
+\texttt{\textbf{\#} Read Train and Test datasets} \\
+\texttt{\textbf{\#} Import Libs \& Modules} \\
+\texttt{\textbf{\#} \textcolor{tug}{Model Selection}} \\
+\texttt{\textbf{\#} \textcolor{tug}{Hyperparameter Tuning}} \\
+\texttt{\textbf{\#} Code Style \& Model Evaluation}}};
+
+\node[textstylesys, below=of sys-rules-3, fill=tugb!10,minimum width=110pt, text width=110pt, minimum height=37pt] (cat-data-2) {\shortstack[l]{
+    \texttt{\textbf{\#} Dataset Description} \\
+    \texttt{\textbf{\#} \texttt{\underline{<CODE> src chain \#2 </CODE>}}} \\
+    \texttt{\bitem col$_{n+1}$ [\textbf{target column}, metadata ...]}\\
+    \texttt{\textbf{\#} Express Task (Classification or Regression)}
+    }};
+
+\node[textstylesys, left=of sys-rules-3, rotate=90,anchor=south, align=center, minimum width=39pt, text width=39pt, minimum height=7.5pt, fill=lightgray!20, draw=lightgray, xshift=0pt](sys-title-2){\textbf{\tiny{\texttt{Rules}}}};
+
+\node[textstylesys, left=of cat-data-2, rotate=90,anchor=south,align=left, minimum width=35pt, text width=35pt, minimum height=7.5pt, fill=tugb!20, draw=tugb, yshift=0mm, xshift=0pt](cat-title-2){\textbf{\tiny{\texttt{Catalog\ \ \ \ Data}}}};
+
+\filldraw[draw=gray, line width=0.5pt, fill=none, rounded corners, densely dotted] ($(sys-title-2.south east)+(-10pt,2pt)$)  rectangle  ($(cat-data-2.south east)+(2pt,-2pt)$); 
+\node[textstylesys, above=of sys-title-2.south, text=gray, xshift=70pt, yshift=25pt] {\textbf{\texttt{Prompt Last Chain}}};
+
+\draw[-{Latex[scale=0.8]} ,line width=0.5pt,black]  ($(chain-0.east)+(-2pt,-1pt)$) .. controls ($(chain-0.east)+(10pt,5pt)$) and ($(chain-0.east)+(10pt,31.55pt)$) .. ($(chain-0.east)+(30pt,31.55pt)$);
+
+
+\draw[line width=0.5pt,black] ($(chain-0.east)+(30pt,31.55pt)$) -- ($(chain-0.east)+(101pt,31.55pt)$);
+
+\draw[-{Latex[scale=0.8]} ,line width=0.5pt,black]  ($(chain-1.east)+(-2pt,-1pt)$) .. controls ($(chain-1.east)+(10pt,5pt)$) and ($(chain-1.east)+(10pt,29.6pt)$) .. ($(chain-1.east)+(30pt,29.6pt)$);
+\draw[line width=0.5pt,black] ($(chain-1.east)+(30pt,29.6pt)$) -- ($(chain-1.east)+(101pt,29.6pt)$);
+
+\draw[-{Latex[scale=0.8]} ,line width=0.5pt,black]  ($(chain-3.east)+(-2pt,-1pt)$) .. controls ($(chain-3.east)+(10pt,5pt)$) and ($(chain-3.east)+(10pt,34.7pt)$) .. ($(chain-3.east)+(30pt,34.7pt)$);
+\draw[line width=0.5pt,black] ($(chain-3.east)+(30pt,34.7pt)$) -- ($(chain-3.east)+(101pt,34.7pt)$);
+
+\draw[-{Latex[scale=0.8]} ,line width=0.5pt,black] ($(chain-2.south)+(0pt,0.3pt)$) |- ($(chain-2.south)+(-76pt,-5pt)$);
+\draw[-{Latex[scale=0.8]} ,line width=0.5pt,black] ($(chain-2.south)+(-75pt,-5pt)$) .. controls +(-20pt,0pt) and +(12pt,-1.25pt) .. ($(chain-1.east)+(-2pt,30.85pt)$);
+
+\draw[line width=0.5pt,black] ($(chain-1.east)+(-1pt,30.7pt)$) -- ($(chain-1.east)+(-70pt,30.7pt)$);
+
+\node[line width=0.5pt,inner sep=0pt, draw=black, circle, minimum size=5pt, fill=white] at ($(chain-0.east)+(9.5pt,15pt)$) {1};
+\node[line width=0.5pt,inner sep=0pt, draw=black, circle, minimum size=5pt, fill=white] at ($(chain-0.east)+(11pt,-22pt)$) {2};
+\node[line width=0.5pt,inner sep=0pt, draw=black, circle, minimum size=5pt, fill=white] at ($(chain-1.east)+(9.5pt,15pt)$) {3};
+\node[line width=0.5pt,inner sep=0pt, draw=black, circle, minimum size=5pt, fill=white] at ($(chain-3.east)+(9.5pt,17pt)$) {4};
+
+\end{tikzpicture}
+

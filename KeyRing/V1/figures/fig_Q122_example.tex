@@ -1,0 +1,16 @@
+\addtolength{\tabcolsep}{-0.4em}
+\renewcommand{\arraystretch}{1} % Default value: 1
+
+
+\begin{tikzpicture}[node distance=1pt, line width=0.5pt, inner xsep=0.4mm, inner ysep=0.5mm, line width=0.5pt]
+
+    \sffamily
+    \node[inner sep=0.6mm, draw=tugb!50, minimum height=140pt] (tree) {\includegraphics[scale=0.85]{img/fig_Q122_tree.pdf}};
+    \node[inner sep=0.6mm, draw=lcolorline, right=of tree] (meta) {\includegraphics[scale=0.55]{img/fig_Q122_metadata.pdf}};
+    \node[inner sep=0.6mm, draw=brown!50, fill=brown!10, right=of meta] (rules) {\includegraphics[scale=0.65]{img/fig_Q122_rules.pdf}};
+
+    \node[inner sep=0mm, draw=none, above=of tree, yshift=1.5pt] (treelbl) {\footnotesize\textbf{Query Tree}};
+    \node[inner sep=0mm, draw=none, above=of meta, yshift=1.5pt] (metalbl) {\footnotesize\textbf{Projected Metadata}};
+    \node[inner sep=0mm, draw=none, above=of rules, yshift=1.5pt] (ruleslbl) {\footnotesize\textbf{Inferred Rules}};
+    
+\end{tikzpicture}

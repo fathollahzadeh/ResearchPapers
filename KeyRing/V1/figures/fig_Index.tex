@@ -1,0 +1,15 @@
+\begin{tikzpicture}[node distance=3pt, line width=0.75pt, inner xsep=0.4mm, inner ysep=0.5mm]
+    \sffamily
+
+    \node[draw=argray,circle, fill=argray, inner ysep=0mm, minimum width=10pt](root) {};
+    \node[draw=argray, fill=argold,circle, inner ysep=0mm, minimum width=10pt,left=of root, xshift=-6pt, yshift=-25pt](l1) {};
+    \node[draw=argray, fill=arred,circle, inner ysep=0mm, minimum width=10pt,left=of root, xshift=6pt, yshift=-25pt](l2) {};
+    \node[draw=argray, fill=arblue,circle, inner ysep=0mm, minimum width=10pt,right=of root, xshift=-6pt, yshift=-25pt](l3) {};
+    \node[draw=argray, fill=arbluelight,circle, inner ysep=0mm, minimum width=10pt,right=of root, xshift=6pt, yshift=-25pt](l4) {};
+
+    \draw[line width=2.2pt,draw=argray!20] (root) -- (l1);
+    \draw[line width=2.2pt,draw=argray!40] (root) -- (l2);
+    \draw[line width=2.2pt,draw=argray!60] (root) -- (l3);
+    \draw[line width=2.2pt,draw=argray!80] (root) -- (l4);
+   
+\end{tikzpicture}

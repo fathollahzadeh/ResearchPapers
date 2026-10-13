@@ -1,0 +1,84 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\aboverulesep}{0pt}
+\setlength{\belowrulesep}{0pt}
+\renewcommand{\arraystretch}{1.35}
+\caption{Join key discovery over thousands of tables: non-LLM methods
+are cheap but decide from overlap and names, all-pairs LLM prompting
+calls the LLM per table pair, hybrids still judge pairs independently;
+\ourmethod calls the LLM per key domain and keeps a target recall.}
+\label{tab:intro-landscape}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}p{1.4cm}YYYY>{\columncolor{sysbg}}Y@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Non-LLM}}
+ & \textbf{LLM}
+ & \textbf{Hybrid}
+ & \textbf{Hybrid} \\
+\cmidrule(lr){2-3}
+ & \textbf{Auto-BI}~\cite{AutoBI}
+ & \textbf{JOSIE}~\cite{DBLP:conf/sigmod/ZhuDNM19}
+ & \textbf{All-pairs}\newline prompting
+ & \textbf{LOTUS}~\cite{LOTUS},\newline \textbf{FDJ}~\cite{FDJ}
+ & \textbf\ourmethod\newline ours \\
+\midrule
+\textbf{Robust to accidental overlap}
+ & \xmark{} learned syntactic features
+ & \xmark{} value overlap
+ & \cmark{}
+ & \cmark{} if routed to LLM
+ & \cmark{} LLM checks each ring \\
+\cmidrule{1-6}
+\textbf{Finds joins with partial or zero containment}
+ & \xmark{}
+ & \xmark{}
+ & \cmark{}
+ & \xmark{} if proxy drops them
+ & \cmark{} normalized formats, embeddings \\
+\cmidrule{1-6}
+\textbf{Labeled data needed}
+ & \xmark{} corpus of BI models
+ & \cmark{} none
+ & \cmark{} none
+ & \cmark{} none
+ & \cmark{} own LLM decisions \\
+\cmidrule{1-6}
+\textbf{LLM calls grow with}
+ & n/a
+ & n/a
+ & \xmark{} table pairs
+ & \xmark{} candidate pairs
+ & \cmark{} key domains \\
+\cmidrule{1-6}
+\textbf{Recall guarantee}
+ & \xmark{}
+ & \xmark{} top-$k$ by overlap
+ & n/a (asks all pairs)
+ & \cmark{} per operator
+ & \cmark{} vs.\ all-pairs LLM \\
+\cmidrule{1-6}
+\textbf{Returns key and direction}
+ & \cmark{}
+ & \xmark{}
+ & \cmark{}
+ & \xmark{} user predicate
+ & \cmark{} owner and members \\
+\cmidrule{1-6}
+\textbf{Consistent, non-redundant graph}
+ & \cmark{} arborescence
+ & \xmark{}
+ & \xmark{} independent answers
+ & \xmark{}
+ & \cmark{} star per key domain \\
+\cmidrule{1-6}
+% TODO(Saeed): fill from the experiments on the largest production database.
+\textbf{F1; cost} (\todo{N} tables)
+ & \todo{F1}; no LLM
+ & \todo{F1}; no LLM
+ & \todo{F1}; \todo{\$, h}
+ & \todo{F1}; \todo{\$, h}
+ & \todo{F1}; \todo{\$, h} \\
+\bottomrule
+\end{tabularx}
+\end{table}

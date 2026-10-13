@@ -1,0 +1,66 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Database applications and modern agentic workflows often issue recurring queries.
+Their workloads are largely known in advance, but they evolve as the application or workflow changes.
+New queries rarely match a past query exactly.
+However, they often share sub-plans---such as join and/or aggregation patterns---with past queries.
+
+\textbf{Rewrite Opportunities:} For example, Stats-CEB query~88 counts the rows of a star join between \texttt{Users}, \texttt{Comments}, and \texttt{Badges}.
+Query~122 counts a star join between \texttt{Users}, \texttt{Posts}, \texttt{PostHistory}, and \texttt{Badges}.
+The two queries differ in tables, predicates, and number of joins, but they share the same \texttt{COUNT(*)} star-join fragment.
+General-purpose optimizers of PostgreSQL, MySQL, and DuckDB, apply the same fixed rewrite rules to every workload~\cite{PiraheshHH92, Calcite}, and easily miss rewrites that a specific workload needs. On Stats-CEB over DuckDB, four queries account for 68\% of the achievable saving.
+Factorizing the \texttt{COUNT(*)} star join into per-branch pre-aggregations cuts one of these queries from 253.9\,s to 354\,ms.
+
+
+\textbf{LLM-based Rewrite Discovery:} LLMs can discover such rewrites through whole query rewriting~\cite{resequel}.
+However, turning a discovered rewrite into reusable knowledge and artifacts is hard for three reasons.
+First, a rewrite mixes the new transformation idea with query-specific constants, tables, and joins, impacting re-useability.
+Second, a generalized transformation must stay correct on every possible query it matches\blue{; even hand-written optimizer transformations are a recurring source of wrong results~\cite{TQS}}.
+Third, the transformation must apply to new queries that contain its pattern only as a sub-plan.
+%
+LLM-based whole query rewriting and specialization also has a high cost though.
+Hence, LLM tokens and latency should not be paid for every query\blue{, a concern shared by offline query optimization, which keeps model inference off the query path~\cite{LimeQO}}. Similarly, LLM-based specialization should not replace existing execution engines, but reuse well-engineered components such as parallel execution and memory management.
+
+
+\input{tables/table1_positioning}
+
+
+\textbf{Limitations of Existing Work:} Given an existing database engine and an evolving workload, we aim to derive verified rewrites that speed up future queries.
+The rewrites must apply to new queries that share fragments with past ones, need no LLM calls at query time, and leave the host unchanged.
+Discovery is paid once per new pattern.
+Table~\ref{tab:intro-landscape} compares one system per category against these properties.
+\blue{Its last row reports the total cost to specialize, including all offline LLM calls, not only the overhead at query time. For {\sys}, this cost depends on whether the needed rules already exist. When all rules are already implemented, {\sys} only reuses them, at \$0 and no LLM call. When new rules must be implemented, {\sys} pays up to \$8 and 1.5\,min. This upper bound is close to ReSequel's \$2, because the 16 \textsf{CEB} queries form 16 ReSequel templates and {\sys} implements 14 rules for them. ReSequel's cost also excludes its verification and Top-1 selection on samples, which would add further overhead. Unlike ReSequel's rewrites, {\sys}'s rules are paid for once and reused on later queries and workloads.}
+%
+Existing systems fall short on three fronts.
+Rule-based optimizers and rule discovery systems, such as WeTune~\cite{WeTune} and LearnedRewrite~\cite{learnedrewrite}, stay within a fixed or bounded rule space and miss workload-specific transformations like the one above.
+LLM rewriters, such as GenRewrite~\cite{GenRewrite}, \blue{LITHE~\cite{LITHE},} and ReSequel~\cite{resequel}, find these transformations, while R-Bot~\cite{RBot} and LLM-R2~\cite{LLMR2} only select and order existing rules.
+The most recent ReSequel~\cite{resequel} outperforms R-Bot, LLM-R2, and LearnedRewrite~\cite{resequel} by grouping queries into templates with masked constants, template rewriting, and selecting the best query variants on samples.
+However, it calls the LLM per new template, and on TPC-H, DSB, and Stats-CEB every query forms its own template~\cite{resequel}.
+Its rewrites do not transfer, so query~122 triggers a new LLM call although it shares query~88's fragment.
+Sample-based selection also has issues, slowing down 53 StackOverflow queries at scale factor 12 on PostgreSQL.
+\blue{Rule-oriented LLM systems, such as QO-Verify~\cite{Narasayya26} and Mallet~\cite{Mallet}, come closer to reusable knowledge. QO-Verify shows that LLM rewrites expose transformation rules missing from the optimizer, but leaves deriving these rules to optimizer developers. Mallet distills LLM output into reusable rules offline, but for SQL dialect translation rather than query optimization.}
+%
+Engine synthesis, such as BespokeOLAP~\cite{bespokeolap}, generates a new engine per workload with an LLM coding agent.
+Synthesis for 16 CEB queries costs \$303 in LLM tokens and 10 to 30 hours, and queries outside its contract run unspecialized on a fallback engine or require re-synthesis.
+Its generated engine also re-implements parallel execution and memory management for every workload, instead of reusing them from a mature host engine.\shorten
+
+
+\textbf{System Overview:} This paper presents {\sys}\footnote{{\sys} stands for Specialized Optimization via LLM EXtraction. The code is available to reviewers at \url{https://anonymous.4open.science/r/SOLEX}.}, a system that teaches existing database engines new rewrites for evolving workloads.
+Unlike prior LLM rewriters, {\sys} uses the LLM only offline for discovering rewrites and keeps what it discovers as verified, reusable rule sets on top of existing host systems.
+{\sys} has two components. First, an \emph{Offline Rule Generator} discovers new rewrite rules for subqueries, verifies the rewrites, and generates C++ code per rewrite rule in the host system. Second, the \emph{Online Rewrite Engine} matches rewrite rules, applies them in workload-specific priority order, and finally emits SQL queries for the host engine.
+
+%The first is the \emph{Offline Rule Generator}. It runs any LLM rewriter on a small workload sample. It compares the logical plans of each original and rewritten query, splits the difference into independent changes, and abstracts each change into a rule over operator patterns. This matters because the reusable knowledge in a rewrite is the transformation, not the rewritten query. The generator indexes each rule by structural fragment keys and discards rules that repeat existing ones. An LLM then implements each new rule as a compiled C++ class. Before admission, an SMT solver~\cite{SQLSolver} tries to prove the rule equivalent, and tests on downsampled data decide when no proof is found. A failed check returns a diagnostic, and the LLM repairs the implementation. Verification runs once per rule, not per query.
+
+%The second is the \emph{Online Rewrite Engine}. It looks up the fragment keys of each incoming query in a Fragment Index, applies matching rules in a priority order set offline, and emits SQL for the target engine. A rewrite takes a median of 1\,ms and needs no LLM call. Rules distilled from query~88 rewrite query~122, although query~122 adds a table branch and uses unseen tables. Queries that match no rule run unchanged, and the generator can add rules for them offline. Because {\sys} rewrites only the logical plan, the host keeps its own physical optimization, parallelism, and memory management, so the speedup of a rewrite adds to what the host provides.
+
+\textbf{Contributions:} Our primary contribution is {\sys} system as a holistic and practical system for LLM-based discovery, composition, and application of query rewriting rules on top of existing database engines.
+%In our evaluation, the rule library distilled from all workloads reduces Stats-CEB time on PostgreSQL by $38.7\times$, compared to $12.9\times$ for ReSequel. Rules distilled from JOB alone transfer unchanged to Stats-CEB and give $28.3\times$. Stats-CEB's own rules give $12.7\times$, close to ReSequel, from a sample of five queries. On CEB, {\sys} brings DuckDB within $1.2\times$ of BespokeOLAP's single-threaded execution time. With multi-threading, {\sys} runs $2.05$--$2.25\times$ faster than BespokeOLAP end-to-end, with no new LLM calls. Rules are also shared across workloads: 125 rules from seven workloads deduplicate to 67 distinct ones.
+%
+Our detailed technical contributions are:\shorten
+\begin{itemize}
+\item A formalization of workload-specialized query rewriting for evolving workloads with shared query fragments, and a system architecture that solves it with LLM-distilled rules while keeping the host engine unchanged (Sections~\ref{sec:background} and~\ref{sec:architecture}).
+\item An offline rule generator that distills the output of any LLM rewriter into rules independent of constants, schemas, and number of joins, and admits rules that are proven equivalent or pass result-equivalence tests (Section~\ref{sec:rule_generator}).
+\item An online rewrite engine that matches rules on plan fragments and emits SQL for PostgreSQL, MySQL, and DuckDB in about 1\,ms, without any LLM calls (Section~\ref{sec:query_rewriting}).
+\item A comprehensive evaluation on nine workloads and three engines against the host engines, ReSequel as a recent LLM rewriter, and BespokeOLAP as an LLM-synthesized engine (Section~\ref{sec:experiments}). The distilled rules yield speedups of $38.7\times$ (for distillation from Stats-CEB), and $28.3\times$ (for distillation from JOB but application to Stats-CEB). {\sys} also outperforms BespokeOLAP by $2.05$--$2.25\times$ (on CEB and DuckDB with multi-threading) without any LLM costs.
+\end{itemize}

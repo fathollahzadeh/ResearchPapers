@@ -1,0 +1,92 @@
+\begin{tikzpicture}[node distance=1mm, font=\footnotesize]  
+  
+  \node[draw=black, inner sep=0.8mm, rounded corners, fill=white] at (0,0) (raw) {\tiny\selectfont\texttt{Raw Pipeline Code}};
+  \node[draw=black, inner sep=0.8mm, rounded corners, fill=black, right=of raw, xshift=8pt, text=white] (parse) {\tiny\selectfont\texttt{Parse \& Compile}};
+  \node[below=of parse, xshift=0pt, draw=black, inner sep=0.8mm, rounded corners, fill=black,text=white, right=of parse, xshift=8pt] (exec) {\tiny\selectfont\texttt{Execute}};
+
+   
+    \node[diamond, below=of parse, draw=black, inner sep=0.1mm, fill=lightgray!30, yshift=-10pt] (condition) {
+      \shortstack[c]{\tiny{Error}\\
+      \tiny{Type}}};  
+    
+    \node[draw=tugb, inner sep=0.5mm, fill=white, left=of condition, yshift=-13pt, xshift=-18pt] (nbes) {
+      \shortstack[c]{\fontsize{4}{4}\selectfont\textbf{Local Search Error} \vspace{-0.5mm}\\
+      \fontsize{3.7}{3.7}\selectfont{Example:\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ } \vspace{-0.5mm} \\ 
+      \fontsize{3.7}{3.7}\selectfont{'pandas' not found! \ \ \ \ }}};
+
+    \node[draw=tugb,, inner sep=0.5mm, fill=white, below=of nbes, yshift=-5pt] (nbea) {
+        \shortstack[c]{\fontsize{4}{4}\selectfont\textbf{Fix Error} \vspace{-0.5mm}\\
+        \fontsize{3.7}{3.7}\selectfont{Example:\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ } \vspace{-0.5mm} \\ 
+        \fontsize{3.7}{3.7}\selectfont{\$ pip install pandas}}};   
+
+    \draw[-{Latex[scale=0.7]}, tugb] (condition) -| (nbes);
+    \draw[-{Latex[scale=0.7]}, tugb] (nbes) -- (nbea);
+    \draw[-{Latex[scale=0.7]}, tugb] (nbea.south) -- ($(nbea.south)+(0pt,-3pt)$) -| ($(raw.south)+(-17pt,0pt)$);
+
+
+    \node[inner xsep=0.3mm,inner ysep=0.5mm, draw=color4, fill=white,minimum height=10pt, below=of condition, xshift=0pt, yshift=-5pt] (err-prompt) {\shortstack[l]{
+      \fontsize{3.7}{3.7}\selectfont{\textbf{Construct Syntax Error Prompt:}}\\
+      \fontsize{3.7}{3.7}\selectfont\texttt{\textbf{\#} Task: Fix Source Code Errors} \vspace{-0.2mm}\\
+      \fontsize{3.7}{3.7}\selectfont\texttt{\textbf{\#} <CODE> Pipeline Src </CODE>} \vspace{-0.5mm}\\
+      \fontsize{3.7}{3.7}\selectfont\texttt{\textbf{\#} <ERROR> Error Message </ERROR>}}};
+
+    \node[inner xsep=0.3mm,inner ysep=0.5mm, draw=tug, fill=white,minimum height=10pt, below=of err-prompt, xshift=15pt, yshift=0pt] (run-err-prompt) {\shortstack[l]{
+        \fontsize{3.7}{3.7}\selectfont{\textbf{Construct Runtime Error Prompt:}}\\
+        \fontsize{3.7}{3.7}\selectfont\texttt{\textbf{\#} .. Syntax Error Prompt ..}  \vspace{-0.2mm}\\
+        \fontsize{3.7}{3.7}\selectfont\texttt{\textbf{\#} Main Prompt Metadata Summary}\vspace{-0.3mm}
+        }};  
+
+  \node[diamond, right=of err-prompt, draw=tug, inner sep=0.7mm, fill=tug!10, xshift=5pt] (conditionrun) {};
+
+  \node[below of=run-err-prompt, xshift=-30pt, yshift=-13pt,draw=black, line width=0.3pt, inner xsep=0.6mm, inner ysep=0.5mm, fill=lightgray!30, rotate=0, minimum width=41pt] (LLM) {\fontsize{5}{5}\selectfont{\textbf{LLM}}};
+
+  \draw[-{Latex[scale=0.7]}] (LLM.west) -| ($(raw.south)+(-21pt,0pt)$);
+  \draw[-{Latex[scale=0.7]}, tug] (err-prompt) -- (conditionrun);
+  \draw[-{Latex[scale=0.7]},tug] (condition.east) -| (conditionrun);
+  \draw[-{Latex[scale=0.7]},tug] (conditionrun) -- ($(conditionrun.south)+(0pt,-9.5pt)$);
+  \draw[-{Latex[scale=0.7]}, color4] (condition) -- (err-prompt);
+  \draw[-{Latex[scale=0.7]}, color4] ($(err-prompt.south)+(-17pt,0pt)$) -- ($(err-prompt.south)+(-17pt,-24pt)$);
+  \draw[-{Latex[scale=0.7]}, tug] ($(run-err-prompt.south)+(-17pt,0pt)$) -- ($(run-err-prompt.south)+(-17pt,-5pt)$);
+
+  \draw[-{Latex[scale=0.5]}, densely dotted, line width=0.8pt, gray] (parse) -- (condition);
+  \draw[-{Latex[scale=0.5]}, densely dotted, line width=0.8pt, gray] (exec) -- (condition.north);
+
+  \node[left=of condition, draw=black, inner sep=0, xshift=2pt, yshift=3pt, draw=none] (kbt) {
+    \fontsize{4.5}{4.5}\selectfont{Knowledge Base (KB)}};
+  
+  \node[right=of condition, draw=black, inner sep=0, xshift=-3pt, yshift=3pt, draw=none] (runt) {
+      \fontsize{4.5}{4.5}\selectfont{Runtime Error (RE)}};  
+  
+  \node[below=of condition, draw=black, inner sep=0, xshift=0pt, yshift=3pt, draw=none] (synt) {
+        \fontsize{4.5}{4.5}\selectfont{\ \ \ \ \  Syntax \ Error (SE)}}; 
+  
+  \draw[-{Latex[scale=0.7]}] (raw) -- (parse);
+  \draw[-{Latex[scale=0.7]}] (parse) -- (exec);
+  \draw[-{Latex[scale=0.7]}] (exec.east) -- ($(exec.east)+(15pt,0pt)$);  
+  
+  
+  %===========================
+  \node [shape=rectangle,fill=orange!20, align=center, right=of condition, xshift=36pt, yshift=-28pt](table1) {
+    \fontsize{4}{4}\selectfont
+    \addtolength{\tabcolsep}{-1.2em}
+            \begin{tabular}{lc} 
+                Error & Type  \\ \midrule
+                Key & KB \\
+                FileNotFound & KB \\
+                InvalidIndex & KB \\
+                Import &  KB\\
+                ZeroDivision &  KB\\
+                Memory &  KB\\ \midrule
+                Syntax & SE \\
+                UFuncType &  SE\\
+                Pickling &  SE\\
+                Indentation &  SE\\
+                Axis &  SE\\
+                Invalid Params &  SE\\
+                Recursion &  SE\\
+                OutOfBounds df. &  SE\\ \midrule
+                Other & RE \\
+                \bottomrule
+            \end{tabular}
+        };   
+\end{tikzpicture}

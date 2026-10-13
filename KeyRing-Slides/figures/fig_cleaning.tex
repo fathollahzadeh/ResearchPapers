@@ -1,0 +1,143 @@
+
+\newcommand{\basestation}[4]{%
+	\path[draw,#2] (0, 0) node[text=#4](#1){\tiny{\textbf{\texttt{#3}}}}
+			(0*120:0.17cm) --
+			(1*120:0.17cm) --
+			(2*120:0.17cm) -- cycle
+}
+
+\begin{tikzpicture}[node distance=0mm, font=\footnotesize, line width=0.3pt]  
+
+  \filldraw[draw=gray, fill=lightgray!20] (-0.60,0.2)  rectangle  (1.21,-2.05);
+
+  % Table 1
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, minimum width=22pt, fill=black, text=white] (otb1) at (-0.15,-0.2){\tiny\textbf{Table \#1}};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, anchor=west, yshift=-2.6pt, minimum width=22pt, fill=tugb!10] (otb1c) at (otb1.south west){\tiny\texttt{C$_1$\hspace{0.2mm}...\hspace{0.2mm}C$_n$}};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb1c, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb1r1){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb1r1, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb1r2){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb1r2, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb1r3){};
+
+  \draw[black]  ($(otb1c.north west)+(6.5pt,0pt)$) -- ($(otb1r3.south west)+(6.5pt,0pt)$);
+  \draw[black]  ($(otb1c.north west)+(14.5pt,0pt)$) -- ($(otb1r3.south west)+(14.5pt,0pt)$);
+
+  % Table 2
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, minimum width=23pt, fill=black, text=white, right=of otb1, xshift=3pt] (otb2){\tiny\textbf{Table \#2}};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, anchor=west, yshift=-2.6pt, minimum width=23pt, fill=tugb!10] (otb2c) at (otb2.south west){\tiny\texttt{C$_1$\hspace{0.2mm}...\hspace{0.2mm}C$_m$}};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb2c, minimum width=23pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb2r1){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb2r1, minimum width=23pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb2r2){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb2r2, minimum width=23pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb2r3){};
+
+  \draw[black]  ($(otb2c.north west)+(6.35pt,0pt)$) -- ($(otb2r3.south west)+(6.35pt,0pt)$);
+  \draw[black]  ($(otb2c.north west)+(14.35pt,0pt)$) -- ($(otb2r3.south west)+(14.35pt,0pt)$);
+
+  % Table 3
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, minimum width=22pt, fill=black, text=white, below=of otb2r3, yshift=-5pt] (otb3){\tiny\textbf{Table \#N}};  
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm,anchor=west, yshift=-2.6pt, minimum width=22pt, fill=tugb!10] (otb3c) at (otb3.south west){\tiny\texttt{C$_1$\hspace{.2mm}...\hspace{1.2mm}y\ }};
+  \node[draw=none, fill=tugb!50, inner xsep=0, inner ysep=0.2mm,below=of otb3.south east,anchor=east, minimum width=7.3pt, minimum height=17.5pt, yshift=-8.7pt, xshift=-.07mm] {};
+  \node[draw=none, inner xsep=0, inner ysep=0.2mm,below=of otb3.south east,anchor=east, yshift=-2.7pt, xshift=-2pt] {\tiny\texttt{y}};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb3c, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb3r1){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb3r1, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb3r2){};
+  \node[draw=black, inner xsep=0, inner ysep=0.2mm, below=of otb3r2, minimum width=22pt, minimum height=4pt, yshift=0.1mm, fill=white] (otb3r3){};
+
+  \node[above=of otb1, xshift=12pt, yshift=3pt, draw=none, inner sep=0mm] (ds-lbl) {\tiny{\textbf{Raw Dataset Files}}};
+
+  \draw[black]  ($(otb3c.north west)+(6.5pt,0pt)$) -- ($(otb3r3.south west)+(6.5pt,0pt)$);
+  \draw[black]  ($(otb3c.north west)+(14.5pt,0pt)$) -- ($(otb3r3.south west)+(14.5pt,0pt)$);
+
+  \draw[-{Latex[scale=0.7]}, black]  (otb2r3) -- (otb3);
+  \draw[-{Latex[scale=0.7]}, black]  (otb1r3.south) -| ($(otb1r3.south)+(0pt,-8pt)$) -- (otb3.west);
+
+  \filldraw[draw=gray, fill=lightgray!20] (1.57,-0.25)  rectangle  (4.48,-1.8);
+
+  
+  \node[draw=black, inner xsep=0, inner ysep=0.5mm, minimum width=35pt,  fill=white,rotate=90] (tbl-name) at (1.75,-1.1) {\tiny{\textbf{\texttt{Table Name}}}}; 
+
+  \node[draw=black, inner xsep=0, inner ysep=0.5mm, minimum width=35pt, fill=white, below=of tbl-name, xshift=-0.1mm, rotate=90] (col-name) {\tiny{\textbf{\texttt{Column Name}}}};
+
+  \node[draw=black, inner xsep=1mm, inner ysep=0.5mm, minimum width=45.9pt, fill=lightgray!15, right=of col-name, xshift=2.9pt, yshift=-3.2pt] (statistics) {\shortstack[c]{\tiny{\textbf{\texttt{Statistics}}}}};
+
+  \node[draw=black, inner xsep=0.2mm, inner ysep=0.5mm, minimum width=28.8pt,fill=white, below=of col-name, xshift=-0.1mm, yshift=-3.1pt, rotate=90] (mean-0) {\tiny{\texttt{Mean Val}}};
+
+  \node[draw=black, inner xsep=0.5mm, inner ysep=0.5mm, minimum width=28.8pt, minimum height=4pt, fill=white, below=of mean-0, xshift=-0.1mm, rotate=90] (distinct) {\shortstack[c]{\tiny{\texttt{\% Distinct}}\vspace{-2pt}\\ \tiny{\texttt{Vals}}}};
+
+  \node[draw=black, inner xsep=0.2mm, inner ysep=0.5mm, minimum width=28.8pt,fill=white, below=of distinct, xshift=-0.1mm, yshift=0pt, rotate=90] (minval) {\tiny{\texttt{Min Val}}};
+
+  \node[draw=black, inner xsep=0.2mm, inner ysep=0.5mm, minimum width=28.8pt,fill=white, below=of minval, xshift=-0.1mm, yshift=0pt, rotate=90] (maxval) {\tiny{\texttt{Max Val}}};
+
+  \node[draw=black, inner xsep=0.2mm, inner ysep=0.5mm, minimum width=28.8pt,fill=white, below=of maxval, xshift=-0.1mm, yshift=0pt, rotate=90] (totalval) {\tiny{\texttt{Total Vals}}};
+
+  \node[draw=black, inner xsep=0.2mm, inner ysep=0.5mm, minimum width=28.8pt,fill=white, below=of totalval, xshift=-0.1mm, yshift=0pt, rotate=90] (missedval) {\shortstack[c]{\tiny{\texttt{\% Missed}}\vspace{-2pt}\\ \tiny{\texttt{Vals}}}};
+  
+  \node[draw=black, inner xsep=0mm, inner ysep=0.5mm, minimum width=35pt, fill=white, below=of missedval, xshift=-0.1mm, yshift=3.1pt, rotate=90] (samples) {\tiny{\textbf{\texttt{Sample List}}}};
+
+  \node[draw=black, inner xsep=0, inner ysep=0.5mm, minimum width=35pt,  fill=white, below=of samples, xshift=-0.1mm, rotate=90] (col-type) {\tiny{\textbf{\texttt{Feature Type}}}};
+
+  \node[draw=black, inner xsep=0, inner ysep=0.5mm, minimum width=35pt,  fill=white, below=of col-type, xshift=-0.1mm, rotate=90] (relation) {\tiny{\textbf{\texttt{Dependencies}}}};
+
+  \node[draw=none, inner xsep=0, inner ysep=0.5mm, right=of tbl-name, xshift=-1pt, yshift=3pt] {\tiny{\textbf{Catalog}}};
+  
+  
+  \basestation{refine-cat}{fill=tug, shift={(4.25, -0.08)}}{b}{white};
+  \basestation{refine-num}{fill=tugb!50, shift={(4, 0.15)}}{a}{black};
+
+  \draw  ($(samples.east)+(1.5pt,0pt)$) |- ($(refine-cat.west)+(2pt,1.3pt)$);
+  \draw  (col-type.east) |- ($(refine-cat.west)+(2pt,-1.3pt)$);
+
+  \draw  ($(samples.east)+(-1.5pt,0pt)$) |- ($(refine-num.west)+(2pt,-1.3pt)$);
+  \draw  (statistics) |- ($(refine-num.west)+(2pt,1.3pt)$);
+
+  \node[draw=black, inner xsep=0.5mm, inner ysep=0.5mm, minimum width=5pt,  fill=black, right=of refine-cat, xshift=4pt, text=white] (llm) {\tiny{\textbf{\texttt{LLM}}}};
+  
+  \draw  ($(refine-cat.east)+(0.5pt,0pt)$) -- (llm);
+  \draw  ($(refine-num.east)+(0.5pt,0pt)$) -| (llm);
+
+  \draw[-{Latex[scale=0.7]}, thick]  (llm) |- (4.48,-1);
+
+  \filldraw[draw=gray, fill=lightgray!20] (5,0.2)  rectangle  (6.2,-2);
+  
+  \basestation{rewrite}{fill=black, shift={(4.75, -1.9)}}{c}{white};
+  \draw  (relation) |- ($(rewrite.west)+(2pt,1.8pt)$);
+  \draw  (col-type) |- ($(rewrite.west)+(2pt,.8pt)$);
+  \draw  (samples) |- ($(rewrite.west)+(2pt,0pt)$);
+  \draw  (col-name) |- ($(rewrite.west)+(2pt,-0.8pt)$);
+  \draw  (tbl-name) |- ($(rewrite.west)+(2pt,-1.8pt)$);
+  \draw  ($(rewrite.west)+(-96.5pt,-2.7pt)$) -- ($(rewrite.west)+(2pt,-2.7pt)$);
+  \draw ($(rewrite.east)+(0.5pt,0pt)$) -- ($(rewrite.east)+(2.7pt,0pt)$);
+
+  \basestation{refine-num-leg}{fill=tugb!50, shift={(-0.3, -2.3)}}{a}{black};
+  \basestation{refine-cat-leg}{fill=tug, shift={(1.5, -2.3)}}{b}{white};
+  \basestation{rewrite-leg}{fill=black, shift={(3.8, -2.3)}}{c}{white};
+
+  \draw ($(refine-num-leg.east)+(0.5pt,0pt)$) -- ($(refine-num-leg.east)+(2.5pt,0pt)$);
+  \draw ($(refine-cat-leg.east)+(0.5pt,0pt)$) -- ($(refine-cat-leg.east)+(2.5pt,0pt)$);
+  \draw ($(rewrite-leg.east)+(0.5pt,0pt)$) -- ($(rewrite-leg.east)+(2.5pt,0pt)$);
+
+  \node[inner sep=0, right=of refine-num-leg, xshift=4pt] (infer) {\tiny{Infer Feature Type}};
+  \node[inner sep=0, right=of refine-cat-leg, xshift=4pt] (refinecat) {\tiny{Refine Categorical Values}};
+  \node[inner sep=0, right=of rewrite-leg, xshift=4pt] (refinecat) {\tiny{Merge \& Write Clean Data}};
+
+  \node[draw=none, inner xsep=0, inner ysep=0.5mm, right=of ds-lbl, xshift=114.5pt, yshift=-3pt] (lbl-clean) {\shortstack[c]{\tiny{\textbf{Clean \& Merge}} \\ \tiny{\textbf{Dataset}}}};
+  
+  % Table clean
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, minimum width=30pt, below=of lbl-clean, fill=black, text=white, yshift=-2pt] (otbclean) {\tiny\textbf{Dataset}};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, anchor=west, minimum width=25pt, fill=tugb!10, below=of otbclean, xshift=-2.5pt](otdbcleanc){\tiny\texttt{X$_1$\hspace{0.2mm}...\hspace{0.2mm}X$_k$}};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, below=of otdbcleanc, minimum width=25pt, minimum height=5pt, yshift=0.1mm, fill=white] (otbcleanr1){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, below=of otbcleanr1, minimum width=25pt, minimum height=5pt, yshift=0.1mm, fill=white] (otbcleanr2){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, below=of otbcleanr2, minimum width=25pt, minimum height=5pt, yshift=0.1mm, fill=white] (otbcleanr3){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, below=of otbcleanr3, minimum width=25pt, minimum height=5pt, yshift=0.1mm, fill=white] (otbcleanr4){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, below=of otbcleanr4, minimum width=25pt, minimum height=5pt, yshift=0.1mm, fill=white] (otbcleanr5){};
+
+  \node[draw=black, inner xsep=0, inner ysep=0.72mm, right=of otdbcleanc, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (yt){\tiny{\texttt{y}}};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, right=of otbcleanr1, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (y1){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, right=of otbcleanr2, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (y2){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, right=of otbcleanr3, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (y3){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, right=of otbcleanr4, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (y4){};
+  \node[draw=black, inner xsep=0, inner ysep=0.4mm, right=of otbcleanr5, minimum width=5pt, minimum height=5pt, xshift=-0.1mm, fill=tugb!50] (y5){};
+
+  \draw[black]  ($(otdbcleanc.north west)+(7.5pt,0pt)$) -- ($(otbcleanr5.south west)+(7.5pt,0pt)$);
+  \draw[black]  ($(otdbcleanc.north west)+(15.75pt,0pt)$) -- ($(otbcleanr5.south west)+(15.75pt,0pt)$);
+
+  \draw[line width=6pt,-{Triangle[width=3*4pt,length=5pt]},draw=gray]  ($(tbl-name.north)+(-12pt,0pt)$) -- ($(tbl-name.north)+(-2pt,0pt)$);
+
+   
+\end{tikzpicture}

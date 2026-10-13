@@ -1,0 +1,187 @@
+\addtolength{\tabcolsep}{-0.4em}
+
+\newcommand{\linenumber}[1]{\texttt{\textcolor{gray}{#1:}}}
+\newcommand{\textblue}[1]{\texttt{\textcolor{black}{#1}}}
+
+\newcommand{\texttug}[1]{\texttt{\textcolor{tug}{#1}}}
+\newcommand{\texttugb}[1]{\texttt{\textcolor{tugb!120}{#1}}}
+\newcommand{\textblack}[1]{\texttt{#1}}
+\newcommand{\textorang}[1]{\texttt{\textcolor{color4}{#1}}}
+\newcommand{\textgreen}[1]{\texttt{\textcolor{black!60!green}{#1}}}
+\newcommand{\textbrown}[1]{\texttt{\textcolor{brown}{#1}}}
+\newcommand{\textbperpal}[1]{\texttt{\textcolor{perpal}{#1}}}
+\newcommand{\textdarkgreen}[1]{\textbf{\texttt{\textcolor{darkgreencode}{#1}}}}
+
+\begin{tikzpicture}[node distance=25pt,font=\normalsize, line width=0.5pt, inner sep=0.4mm,
+    tablestyle/.style={draw=none, fill=none, inner ysep=0.8mm, inner xsep=0.4mm,rounded corners=0pt},use Hobby shortcut]
+
+    \sffamily 
+    \node[tablestyle] (u) {chn};
+    \node[tablestyle, right=of u, xshift=-15pt, yshift=8pt] (b) {k};
+    \node[tablestyle, above=of b, xshift=0pt, yshift=-12pt] (p) {kt};    
+    \node[tablestyle, above=of p, xshift=0pt, yshift=-8pt] (ph) {t};
+    
+    \node[draw=none, fill=none, xshift=0pt, yshift=-9pt, above=of u, inner sep=0.9mm, text=black] (join1) {\normalsize{$\Join_1$}};
+    \node[draw=none, fill=none, above=of join1,xshift=0pt, yshift=-9pt, inner sep=0.9mm, text=black] (join2) {\normalsize{$\Join_2$}};
+    \node[draw=none, fill=none, above=of join2,xshift=0pt, yshift=-9pt, inner sep=0.9mm, text=black] (join3) {\normalsize{$\Join_3$}};
+   
+    \draw[-,tugb, line width=1pt,line cap=round] ($(join1.south east)+(10pt,-8pt)$) -- ($(join1.east)+(-2pt,0pt)$);
+    \draw[-,tugb, line width=1pt,line cap=round] ($(join2.south east)+(10pt,-8pt)$) -- ($(join2.east)+(-2pt,0pt)$);
+    \draw[-,tugb, line width=1pt,line cap=round] ($(join3.south east)+(10pt,-8pt)$) -- ($(join3.east)+(-2pt,0pt)$);
+
+    \draw[-,tugb, line width=1pt,line cap=round] ($(u.north)+(-2pt,0pt)$) -- ($(join1.south)+(-2pt,0pt)$); 
+    \draw[-,tugb, line width=2pt,line cap=round] ($(join1.north)+(-2pt,0pt)$) -- ($(join2.south)+(-2pt,0pt)$);
+    \draw[-,tugb, line width=2pt,line cap=round] ($(join2.north)+(-2pt,0pt)$) -- ($(join3.south)+(-2pt,0pt)$);
+
+    \node (base) at ($(join3)+(-12pt,-24pt)$) {};
+    \path 
+    ($(base)+(-105pt,-2pt)$) coordinate (z0)
+    ($(base)+(-108pt,-7pt)$) coordinate (z1)
+    ($(base)+(-113pt,-10pt)$) coordinate (z2)
+    ($(base)+(-110pt,-33pt)$) coordinate (z3)
+    ($(base)+(-95pt,-32pt)$) coordinate (z4)
+    ($(base)+(-75pt,-31pt)$) coordinate (z5)
+    ($(base)+(-65pt,-29pt)$) coordinate (z6)
+    ($(base)+(-55pt,-28pt)$) coordinate (z7)
+    ($(base)+(-45pt,-21pt)$) coordinate (z8)
+    ($(base)+(-35pt,-15pt)$) coordinate (z9)
+    ($(base)+(-15pt,-10pt)$) coordinate (z10)
+    ($(base)+(-40pt,8pt)$) coordinate (z11)
+    ($(base)+(-50pt,13pt)$) coordinate (z12)
+    ($(base)+(-65pt,15pt)$) coordinate (z13)
+    ($(base)+(-80pt,10pt)$) coordinate (z14)
+    ($(base)+(-90pt,5pt)$) coordinate (z15)
+    ;
+
+
+    \draw[closed,densely dotted, gray, fill=lightgray!15] (z0).. (z1) .. (z2).. (z3) .. (z4) .. (z5).. (z6) .. (z7) .. (z8).. (z9) .. (z10) .. (z11)..(z12) .. (z13) .. (z14).. (z15);
+
+    \node[draw=gray, densely dotted, fill=brown!10, minimum width=75pt, minimum height=25pt, rounded corners=3pt] (replace) at ($(join3)+(-78pt,36pt)$) {};
+
+    \draw[-{Latex[scale=1]},densely dotted, gray, fill=lightgray!15] (z2)..(replace.south west);
+    \node[rotate=82] at ($(z1)+(-10pt,25pt)$) {\small{generalized op}};
+
+
+    \node (base) at ($(join3)+(-12pt,-65pt)$) {};
+    \path
+    ($(base)+(-15pt,2pt)$) coordinate (z04) 
+    ($(base)+(-20pt,-1pt)$) coordinate (z03) 
+    ($(base)+(-25pt,-3pt)$) coordinate (z02) 
+    ($(base)+(-40pt,-2pt)$) coordinate (z01) 
+    ($(base)+(-60pt,-1pt)$) coordinate (z00)
+    ($(base)+(-80pt,-2pt)$) coordinate (z0)
+    %($(base)+(-105pt,-2pt)$) coordinate (z0)
+    ($(base)+(-108pt,-7pt)$) coordinate (z1)
+    ($(base)+(-113pt,-10pt)$) coordinate (z2)
+    ($(base)+(-110pt,-30pt)$) coordinate (z3)
+    ($(base)+(-95pt,-32pt)$) coordinate (z4)
+    ($(base)+(-75pt,-31pt)$) coordinate (z5)
+    ($(base)+(-65pt,-29pt)$) coordinate (z6)
+    ($(base)+(-55pt,-24pt)$) coordinate (z7)
+    ($(base)+(-45pt,-19pt)$) coordinate (z8)
+    ($(base)+(-35pt,-15pt)$) coordinate (z9)
+    ($(base)+(-12pt,-1pt)$) coordinate (z10)
+    ($(base)+(-6pt,2pt)$) coordinate (z100)
+    ($(base)+(1pt,10pt)$) coordinate (z11)
+    ($(base)+(-10pt,11pt)$) coordinate (z12)
+    ($(base)+(-15pt,-2pt)$) coordinate (z13)
+    ($(base)+(-20pt,5pt)$) coordinate (z14)
+    ($(base)+(-60pt,-10pt)$) coordinate (z15)
+    ;
+
+    \draw[closed,densely dotted, tug, fill=tug!10] (z04)..(z03)..(z02)..(z01).. (z00)..(z0).. (z1) .. (z2).. (z3) .. (z4) .. (z5).. (z6) .. (z7) .. (z8).. (z9) .. (z10) ..(z100) .. (z11)..(z12);
+    \node[rotate=5, text=red] at ($(z0)+(-15pt,3pt)$) {\small{\ding{56} delete}};
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[draw=none, fill=none, above=of join3,xshift=-2pt, yshift=-5pt, inner xsep=2pt, inner ysep=0.6mm, text=black] (filter) {\Large{\textbf{$\sigma$}}};
+    \node[draw=none, fill=none, above=of filter,xshift=0pt, yshift=-15pt, inner xsep=0pt, inner ysep=0.6mm, text=black] (projection) {\Large{\textbf{$\gamma$}}};
+    
+      
+    \node[draw=none,fill=none,xshift=0pt, yshift=0pt, inner xsep=1pt, inner ysep=0.6mm, text=black] (f1) at ($(filter.south west)+(-10pt,-4pt)$) {\faAngleUp};
+
+    \node[draw=gray,circle,fill=lightgreencode!60,xshift=0pt, yshift=10pt, inner sep=0.15mm, text=black] (like1) at ($(f1.south)+(-45pt,-15pt)$) {\tiny{\textblue{LIKE}}};
+    \node[draw=lightgray, fill=lightgreencode!60,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.7mm, text=black] (like1l) at ($(like1.south)+(-10pt,-8pt)$) {\tiny{\textblack{chn.\textbperpal{name}}}};
+    \node[draw=lightgray, fill=lightgreencode!60,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=tug] (like1r) at ($(like1.south)+(15pt,-8pt)$) {\tiny{\texttt{\$\$\$\_A}}};
+
+        
+    \node[draw=none,fill=none,xshift=0pt, yshift=8pt, inner xsep=1pt, inner ysep=0.6mm, text=black, below=of f1] (f2) {\faAngleUp};
+    \node[draw=none, fill=none,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e1) at ($(f2.south)+(-55pt,-5pt)$) {\faAngleDown};
+
+    \node[draw=gray,circle, fill=tugb!30,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e2) at ($(e1.south)+(-25pt,-17pt)$) {\tiny{\textblue{\faEquals}}};
+    \node[draw=lightgray, fill=tugb!30,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.7mm, text=black] (e2l) at ($(e2.south)+(-13pt,-8pt)$) {\tiny{\textblack{k.\textbperpal{keyword}}}};
+    \node[draw=lightgray, fill=tugb!30,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.5mm, text=tug] (e2r) at ($(e2.south)+(15pt,-8pt)$) {\tiny{\texttt{\$\$\$\_B}}};
+
+    \node[draw=gray,circle, fill=tugb!30,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e21) at ($(e1.south)+(15pt,-4pt)$) {\tiny{\textblue{\faEquals}}};
+    \node[draw=lightgray, fill=tugb!30,densely dotted,xshift=7pt, yshift=0pt, inner sep=0.7mm, text=black] (e21l) at ($(e21.south)+(-20pt,-8pt)$) {\tiny{\textblack{k.\textbperpal{keyword}}}};
+    \node[draw=lightgray, fill=tugb!30,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.5mm, text=tug] (e21r) at ($(e21.south)+(17pt,-8pt)$) {\tiny{\texttt{\$\$\$\_C}}};
+
+    \node[draw=none,fill=none,xshift=0pt, yshift=2pt, inner xsep=1pt, inner ysep=0.6mm, text=black, below=of f2] (f3) {\faAngleUp};
+    \node[draw=gray,circle, fill=lightgray!20,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e3) at ($(f3.south)+(-30pt,-6pt)$) {\tiny{\textblue{\faEquals}}};
+    \node[draw=lightgray, fill=lightgray!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.7mm, text=black] (e3l) at ($(e3.south)+(-11pt,-8pt)$) {\tiny{\textblack{k.\textbperpal{kind}}}};
+    \node[draw=lightgray, fill=lightgray!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.4mm, text=tug] (e3r) at ($(e3.south)+(11pt,-8pt)$) {\tiny{\texttt{\$\$\$\_D}}};
+
+    \node[draw=none,fill=none,xshift=0pt, yshift=13pt, inner xsep=1pt, inner ysep=0.6mm, text=black, below=of f3] (f4) {\faAngleUp};
+    \node[draw=gray,circle, fill=yellow!20,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e4) at ($(f4.south)+(0pt,-8pt)$)  {\tiny{\textblue{\faGreaterThan}}};
+    \node[draw=lightgray, fill=yellow!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e4l) at ($(e4.south)+(-17pt,-18pt)$) {\tiny{\textblack{t.\textbperpal{production\_year}}}};
+    \node[draw=lightgray, fill=yellow!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.4mm, text=tug] (e4r) at ($(e4.south)+(0pt,-10pt)$) {\tiny{\texttt{\$\$\$\_E}}};
+
+    \node[draw=gray,circle, fill=yellow!20,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e5) at ($(f4.south)+(-85pt,-10pt)$)  {\tiny{\textblue{\faGreaterThan}}};
+    \node[draw=lightgray, fill=yellow!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.2mm, text=black] (e5l) at ($(e5.south)+(3pt,-13pt)$) {\tiny{\textblack{t.\textbperpal{production\_year}}}};
+    \node[draw=lightgray, fill=yellow!20,densely dotted,xshift=0pt, yshift=0pt, inner sep=0.4mm, text=tug] (e5r) at ($(e5.south)+(20pt,-5pt)$) {\tiny{\texttt{\$\$\$\_F}}};
+
+    \node[draw=gray,fill=tugb!30,circle,xshift=0pt, yshift=0pt, inner sep=0.3mm, rounded corners=0pt, text=black] (like1p) at ($(e1.south)+(-3pt,60pt)$) {\tiny{\textblue{IN}}};
+    \node[draw=lightgray, fill=tugb!30,xshift=0pt,densely dotted, yshift=0pt, inner sep=0.7mm, text=black] (like1lp) at ($(like1p.south)+(-20pt,-8pt)$) {\tiny{\textblack{k.\textbperpal{keyword}}}};
+    \node[draw=lightgray, fill=tugb!30,xshift=0pt,densely dotted, yshift=0pt, inner sep=0.5mm, text=black] (like1rp) at ($(like1p.south)+(20pt,-8pt)$) {\tiny{\texttt{\textcolor{tug}{\$\$\$\_BC}}}};
+    
+
+
+    \draw[-,tugb, line width=2pt,line cap=round] ($(filter.west)+(0pt,-2pt)$) -- (f1);
+    \draw[-,tugb, line width=2pt,line cap=round] (f2) -- (f1);
+    \draw[-,tugb, line width=2pt,line cap=round] (f3) -- (f2);
+
+    \draw[-,tugb, line width=2pt,line cap=round] ($(join3.north)+(-2pt,2pt)$) -- (filter);
+    \draw[-,tugb, line width=2pt,line cap=round] (filter) -- (projection);
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(like1r.north)+(3pt,0pt)$) -- (like1.south east);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(like1l.north)+(0pt,0pt)$)--(like1.south west);
+
+    \draw[-,tugb, line width=1pt,line cap=round] (like1) -- (f1); 
+
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e2r) -- (e2);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e2l) -- (e2);
+    \draw[-,tugb, line width=1pt,line cap=round] (f2) -- (e1);
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e21r) -- (e21);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(e21l.north)+(0pt,0pt)$) -- (e21.south west);
+
+    \draw[-,gray, line width=0.7pt,line cap=round] (e2.north) -- (e1.west);
+    \draw[-,gray, line width=0.7pt,line cap=round] (e21) -- (e1.east);
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e3r) -- (e3);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e3l) -- (e3);
+    \draw[-,tugb, line width=1pt,line cap=round] (f3) -- (e3);
+
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e4r) -- (e4);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(e4l.north)+(-3pt,0pt)$)--(e4.south west);
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] (e5r) -- (e5);
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(e5l.north)+(-10pt,0pt)$)--(e5.south west);
+
+    \draw[-,tugb, line width=1pt,line cap=round] ($(e4.north)+(0pt,0pt)$) -- ($(f4.south)+(0pt,3pt)$);
+    \draw[-,tugb, line width=2pt,line cap=round] (f3) -- (f4);
+
+    \node[inner sep=0pt] (base) at (f4.south west) {};
+    \path 
+    ($(base)+(2pt,3pt)$) coordinate (k0)
+    ($(base)+(-20pt,-10pt)$) coordinate (k1)
+    ($(base)+(-40pt,-10pt)$) coordinate (k2)
+    (e5.east) coordinate (k3)
+    ;
+    
+    \draw[tugb, line width=1pt] (k0).. (k1) .. (k2) .. (k3);
+
+    \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(like1rp.north)+(0pt,0pt)$)--(like1p.east);
+     \draw[-{Latex[scale=0.6]},gray, line width=0.7pt,line cap=round] ($(like1lp.north)+(0pt,0pt)$)--(like1p.west);
+   
+\end{tikzpicture}

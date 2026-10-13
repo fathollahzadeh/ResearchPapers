@@ -1,0 +1,183 @@
+\mode<presentation>
+\usepackage{caption}
+
+\setbeamertemplate{sections/subsections in toc}[square]
+\setbeamertemplate{itemize item}[square]
+\setbeamertemplate{itemize subitem}[circle]
+
+% Allow multi-slide frames
+\setbeamertemplate{frametitle continuation}{}
+
+% Horizontal separator
+\setbeamertemplate{separator}{%
+    \usebeamercolor{separator}%
+    \textcolor{fg}{\rule{.7\textwidth}{.5pt}}%
+}
+
+% Separate authors with newlines
+\renewcommand{\beamer@andtitle}{\\}
+
+% Title page. If you want to add a background image on the title slide,
+% use the \background command to set the path to that image. Otherwise,
+% no image will be included
+\RequirePackage{tikz}
+\usetikzlibrary{fadings}
+\newcommand{\background}[1]%
+    {\newcommand{\bruno@background}{#1}}
+
+\tikzfading[
+    name=title page picture fading,
+    left color=transparent!0,
+    right color=transparent!100,
+]
+
+\setbeamertemplate{title page}{%
+    % \begin{minipage}{\textwidth}
+    %     %\raggedright
+    %     \centering
+    %     \vspace{3em}
+    %     \usebeamerfont{title}
+    %     \Large{\inserttitle}
+
+    %     \usebeamertemplate{separator}
+
+    %     \usebeamerfont{author}
+    %     \vspace{2em}
+    %     \insertauthor
+    %     \vspace{2em}
+    %     %\textcolor{gray}{23/01/2026}
+        
+
+    %     \vspace{1em}
+    %     \usebeamerfont{details}
+    %     \insertinstitute
+         
+    %     % \begin{figure}[!t]
+    %     %     \centering
+    %     %     \vspace{-10pt}
+    %     %     \hspace{-270pt}            
+    %     %     \includegraphics[scale=0.17]{fig/concordia.jpg}           
+    %     %     \vspace{-80pt}
+    %     %     \caption*{\hspace{-400pt} \textbf{1}}
+    %     %     %-------------------------------------
+    %     %     \vspace{-13pt}
+    %     %     \hspace{60pt}
+    %     %     \includegraphics[scale=0.17]{fig/tub.png} 
+    %     %     \vspace{0pt}
+    %     %     \includegraphics[scale=0.10]{fig/BIFOLD.jpg}  
+    %     %     \vspace{-40pt}
+    %     %     \caption*{\hspace{-40pt} \textbf{2} \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textbf{3}}
+    %     %     \vspace{60pt}
+    %     %     \caption*{\hspace{-35pt} \textbf{}}
+    %     % \end{figure}                 
+    % \end{minipage}
+
+    \begin{minipage}{\textwidth}
+        %\raggedright
+        \centering
+        \vspace{3em}
+        \usebeamerfont{title}
+        \inserttitle
+
+        \usebeamertemplate{separator}
+
+        \vspace{1em}
+        \includegraphics[scale=0.15]{fig/concordia.jpg}
+        
+        \usebeamerfont{author}
+        \vspace{-9.5em}
+        \insertauthor
+
+        \vspace{6em}        
+        \small{\insertinstitute}
+
+                         
+    \end{minipage}
+
+    % Include faded image on the right if defined
+    \ifdefined\bruno@background
+    \begin{tikzpicture}[remember picture, overlay]
+        % Crop image to a trapezium on the right
+        \clip (current page.south east)
+           -- (current page.north east)
+           -- ++(-1.9, 0)
+           -- ++(-4.3, -\paperheight)
+           -- cycle;
+
+        % Include background image
+        \node[
+            anchor=south east,
+            inner sep=0,
+            outer sep=0
+        ] at ($(current page.south east)+(-30pt,12pt)$$) {
+            \includegraphics[scale=0.33]%width=0.5\paperwidth,height=\paperheight
+                {\bruno@background}               
+        };
+
+        \node[] at (13.6,3.5) {\shortstack[c]{\vspace{-30pt} \\  \textbf{\hspace{-27pt}October 28}}};
+
+        % Add a slight shadow
+        \fill[
+            gray, path fading=title page picture fading,
+            fading angle=-15
+        ]
+            (current page.south east)
+            rectangle
+            ++(-10, \dimexpr\paperheight+1cm);                        
+    \end{tikzpicture}
+    \fi
+}
+
+% Block templates: hide the dark title bar when title is empty
+\setbeamertemplate{block begin}{%
+  \par\vskip\medskipamount%
+  \ifx\insertblocktitle\empty\else
+    \begin{beamercolorbox}[colsep*=.75ex]{block title}%
+      \usebeamerfont*{block title}\insertblocktitle%
+    \end{beamercolorbox}%
+    {\parskip0pt\par}%
+    \nointerlineskip\vskip-0.5pt%
+  \fi
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+}
+\setbeamertemplate{block end}{%
+  \end{beamercolorbox}\vskip\smallskipamount%
+}
+
+\setbeamertemplate{block example begin}{%
+  \par\vskip\medskipamount%
+  \ifx\insertblocktitle\empty\else
+    \begin{beamercolorbox}[colsep*=.75ex]{block title example}%
+      \usebeamerfont*{block title example}\insertblocktitle%
+    \end{beamercolorbox}%
+    {\parskip0pt\par}%
+    \nointerlineskip\vskip-0.5pt%
+  \fi
+  \usebeamerfont{block body example}%
+  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body example}%
+    \ifbeamercolorempty[bg]{block body example}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+}
+\setbeamertemplate{block example end}{%
+  \end{beamercolorbox}\vskip\smallskipamount%
+}
+
+\setbeamertemplate{block alerted begin}{%
+  \par\vskip\medskipamount%
+  \ifx\insertblocktitle\empty\else
+    \begin{beamercolorbox}[colsep*=.75ex]{block title alerted}%
+      \usebeamerfont*{block title alerted}\insertblocktitle%
+    \end{beamercolorbox}%
+    {\parskip0pt\par}%
+    \nointerlineskip\vskip-0.5pt%
+  \fi
+  \usebeamerfont{block body alerted}%
+  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body alerted}%
+    \ifbeamercolorempty[bg]{block body alerted}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+}
+\setbeamertemplate{block alerted end}{%
+  \end{beamercolorbox}\vskip\smallskipamount%
+}
+
+\mode<all>

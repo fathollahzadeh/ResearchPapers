@@ -1,0 +1,72 @@
+
+\newcommand{\addpromptitem}[1]{\fontsize{4}{4}\selectfont{#1}}
+
+\begin{tikzpicture}[node distance=1mm, font=\scriptsize,
+    itemstyle/.style={draw=gray, fill=white, inner ysep=0.4mm, inner xsep=0.3mm,minimum width=40pt, minimum height=6pt,rounded corners},
+    promptitemstyle/.style={draw=gray,line width=0.10mm, fill=white, inner ysep=0.4mm, inner xsep=0.5mm},
+    llmstyle/.style={draw=black,line width=0.10mm, fill=tugb!30, inner ysep=0.4mm, inner xsep=0.5mm},
+    ]
+
+    \node[draw=gray, fill=gray!15,  inner sep=0.5mm, minimum width=187pt, minimum height=48pt, xshift=5pt, yshift=-9pt] (prompt) at(0,0) {};
+
+    %\node[inner sep=0.5mm, above=of prompt, yshift=-3pt] (prompt_onstruction) {Prompt Construction};
+
+    % Data Preprocessing
+    \filldraw[draw=lightgray, fill=lightgray!10, rounded corners] (-3,0.45)  rectangle  (-1,-.95); 
+
+    \node[promptitemstyle] (cleaning) at (-2.5,.2) {\shortstack[c]{\addpromptitem{Data} \\ [-2pt] \addpromptitem{Cleaning}}};
+    \node[promptitemstyle,right=of cleaning, xshift=0pt] (augmentation) {\shortstack[c]{\addpromptitem{Data} \\ [-2pt] \addpromptitem{Augmentation}}};
+    \node[promptitemstyle,below=of cleaning, xshift=15pt, inner xsep=2mm] (preprocessing_prompt) {\addpromptitem{Prompt Generator}};
+    \node[llmstyle,below=of preprocessing_prompt] (preprocessing_llm) {\addpromptitem{LLM}};
+    \node[promptitemstyle,below=of preprocessing_llm] (validation_prompt) {\addpromptitem{validation}};
+
+    \node[left=of preprocessing_llm, rotate=90, draw=none, fill=none, text=tug, xshift=19.5pt, yshift=18pt] {\fontsize{3.15}{3.15}\selectfont{Data Preprocessing}};
+    
+    \draw[-{Latex[scale=0.45]}, gray] (cleaning) -- ($(cleaning.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (augmentation) -- ($(augmentation.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (preprocessing_prompt) -- ($(preprocessing_prompt.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (preprocessing_llm) -- ($(preprocessing_llm.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}] (validation_prompt) -- ($(validation_prompt.south)+(0pt,-5pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (validation_prompt.east) -| ($(preprocessing_prompt.south east)+(-5pt,0)$);
+
+    % Feature Engineering
+    \filldraw[draw=lightgray, fill=lightgray!10, rounded corners] (-0.9,0.45)  rectangle  (1,-.95); 
+
+    \node[promptitemstyle] (extraction) at(-0.3,.2) {\shortstack[c]{\addpromptitem{Feature} \\ [-1.9pt] \addpromptitem{Extraction}}};
+    \node[promptitemstyle,right=of extraction, xshift=0pt] (selection) {\shortstack[c]{\addpromptitem{Feature} \\ [-1.9pt] \addpromptitem{Selection}}};
+    \node[promptitemstyle,below=of extraction, xshift=10pt, inner xsep=2mm] (feature_prompt) {\addpromptitem{Prompt Generator}};
+    \node[llmstyle,below=of feature_prompt] (feature_llm) {\addpromptitem{LLM}};
+    \node[promptitemstyle,below=of feature_llm] (validation_prompt_f) {\addpromptitem{validation}};
+
+    \node[left=of feature_llm, rotate=90, draw=none, fill=none, text=tug,  xshift=19.5pt, yshift=15pt] {\fontsize{3.15}{3.15}\selectfont{Feature Engineering}};
+    
+    \draw[-{Latex[scale=0.45]}, gray] (extraction) -- ($(extraction.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (selection) -- ($(selection.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (feature_prompt) -- ($(feature_prompt.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (feature_llm) -- ($(feature_llm.south)+(0pt,-3pt)$);
+    \draw[-{Latex[scale=0.45]}] (validation_prompt_f) -- ($(validation_prompt_f.south)+(0pt,-5pt)$);
+    \draw[-{Latex[scale=0.45]}, gray] (validation_prompt_f.east) -| ($(feature_prompt.south east)+(-5pt,0)$);
+
+    \draw[-{Latex[scale=0.45]}] ($(validation_prompt.south)+(0,-4.75pt)$) -| ($(feature_prompt.south west)+(5pt,0pt)$);
+
+    % Model
+    \filldraw[draw=lightgray, fill=lightgray!10, rounded corners] (1.1,0.45)  rectangle  (3.4,-.95); 
+
+     \node[promptitemstyle] (model) at(1.8,.2) {\shortstack[c]{\addpromptitem{Model / Algorithm} \\ [-1.8pt] \addpromptitem{Selection}}};
+     \node[promptitemstyle,right=of model, xshift=0pt] (hyper) {\shortstack[c]{\addpromptitem{Hypermeter} \\ [-1.8pt] \addpromptitem{Optimization}}};
+     \node[promptitemstyle,below=of hyper, xshift=-15pt, inner xsep=2mm] (model_prompt) {\addpromptitem{Prompt Generator}};
+     \node[llmstyle,below=of model_prompt] (model_llm) {\addpromptitem{LLM}};
+     \node[promptitemstyle,below=of model_llm] (validation_prompt) {\addpromptitem{validation}};
+ 
+    \node[left=of model_llm, rotate=90, draw=none, fill=none, text=tug, xshift=16pt, yshift=25pt] {\shortstack[c]{\fontsize{3.15}{3.15}\selectfont{Model Selection} \\ [-1.8pt] \fontsize{3.15}{3.15}\selectfont{\& Optimization}}};
+     
+     \draw[-{Latex[scale=0.45]}, gray] (model) -- ($(model.south)+(0pt,-3pt)$);
+     \draw[-{Latex[scale=0.45]}, gray] (hyper) -- ($(hyper.south)+(0pt,-3pt)$);
+     \draw[-{Latex[scale=0.45]}, gray] (model_prompt) -- ($(model_prompt.south)+(0pt,-3pt)$);
+     \draw[-{Latex[scale=0.45]}, gray] (model_llm) -- ($(model_llm.south)+(0pt,-3pt)$);
+     \draw[-{Latex[scale=0.65]}] (validation_prompt) -- ($(validation_prompt.south)+(0pt,-12pt)$);
+     \draw[-{Latex[scale=0.45]}, gray] (validation_prompt.east) -| ($(model_prompt.south east)+(-5pt,0)$);
+ 
+     \draw[-{Latex[scale=0.45]}] ($(validation_prompt_f.south)+(0,-4.75pt)$) -| ($(model_prompt.south west)+(5pt,0pt)$);     
+    
+\end{tikzpicture}

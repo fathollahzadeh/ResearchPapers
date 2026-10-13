@@ -1,0 +1,30 @@
+\addtolength{\tabcolsep}{-0.4em}
+\renewcommand{\arraystretch}{1} % Default value: 1
+
+
+\begin{tikzpicture}[node distance=3pt, line width=0.5pt, inner xsep=0.4mm, inner ysep=0.5mm]
+
+    
+    \node[draw=gray!80, fill=lightgray!10, minimum width=115pt, rounded corners=2pt, inner ysep=1.1mm] (templateparams) {
+        \shortstack[l]{
+          \textbf{\texttt{Query Parameters} (\blue{\p}):\vspace{20pt}}}
+    };
+
+    \node[draw=gray!80, fill=white, below=of templateparams, anchor=south, inner ysep=1.2mm, inner xsep=0.6mm,yshift=7pt,rounded corners=2pt] (templateparamsit1) {\small{\texttt{Extract Filter Parameters}}};
+
+
+    \node[draw=gray!80, fill=lightgray!10, below=of templateparams, minimum width=115pt, yshift=-5pt, rounded corners=2pt,inner ysep=1.1mm] (templatemqt) {
+        \shortstack[l]{
+          \textbf{\texttt{Mask Query Template} (\blue{\qt}):\vspace{57pt}}}
+    };
+    \node[draw=gray, fill=white, below=of templatemqt, anchor=south, inner sep=1.1mm, yshift=40pt, xshift=-18pt, minimum width=75pt,rounded corners=2pt] (templatemqtit1) {\small{\texttt{Normalize Queries}}};
+
+    \node[draw=gray, fill=white, below=of templatemqtit1, inner sep=1.1mm, yshift=0pt, xshift=15pt, minimum width=70pt, rounded corners=2pt] (templatemqtit2) {\small{\texttt{Mask Constants}}};
+
+    \node[draw=gray, fill=white, below=of templatemqtit2, inner sep=1.1mm, yshift=0pt, xshift=15pt, minimum width=75pt, rounded corners=2pt] (templatemqtit3) {\small{\texttt{Generalize Operators}}};
+
+    \draw[-{Latex[scale=1]}, gray, line width=0.7pt] (templatemqtit1.east) -| ($(templatemqtit1.east)+(7pt,-10pt)$);
+    \draw[-{Latex[scale=1]}, gray, line width=0.7pt] (templatemqtit2.east) -| ($(templatemqtit2.east)+(10pt,-10pt)$);
+
+   
+\end{tikzpicture}

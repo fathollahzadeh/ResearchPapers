@@ -1,0 +1,23 @@
+\begin{tikzpicture}[
+    node distance=-0.1mm,
+    text width=0.55\columnwidth,
+    textstyle/.style={font=\ttfamily},
+]    
+\node[textstyle] (rule){\textbf{Task:} Generate a data science pipeline in Python that answers a question based on a given dataset, Schema, and Data Profiling Info.};
+
+\node[textstyle, below=of rule] (rule){\textbf{Input:} A dataset in CSV format, a schema that describes the columns and data types of the dataset, and a data profiling info that summarizes the statistics and quality of the dataset.};
+
+\node[textstyle, below=of rule] (rule){\textbf{Output:} A Python code that performs the following steps:};
+\node[textstyle, below=of rule] (rule){\textbf{\#1:} Import the necessary libraries and modules.};
+\node[textstyle, below=of rule] (rule){\textbf{\#2:} Load the train and test datasets.};
+\node[textstyle, below=of rule] (rule){\textbf{\#3:} The user will provide the Schema, and Data Profiling Info of the dataset with columns appropriately named as attributes.};
+\node[textstyle, below=of rule] (rule){\textbf{\#4:} Perform data cleaning and preprocessing.};
+\node[textstyle, below=of rule] (rule){\textbf{\#5:} Utilize data augmentation techniques on the dataset to enhance accuracy and mitigate overfitting.};
+\node[textstyle, below=of rule] (rule){\textbf{\#6:} Perform feature processing (e.g., encode categorical values by dummyEncode).};
+\node[textstyle, below=of rule] (rule){\textbf{\#7:} Select the appropriate features and target variables for the question. Additional columns add new semantic information, additional columns that are useful for a downstream algorithm predicting "TARGET". They can e.g. be feature combinations, transformations, aggregations where the new column is a function of the existing columns. Use appropriate scale factor for columns are needto transfer.};
+\node[textstyle, below=of rule] (rule){\textbf{\#8:} Perform drops columns, if these may be redundant and hurt the predictive performance of the downstream classifier (Feature selection).};
+\node[textstyle, below=of rule] (rule){\textbf{\#9:} Code formatting for all steps (some code  style is added).};
+\node[textstyle, below=of rule] (rule){\textbf{\#10:} Calculate the model accuracy.};
+\node[textstyle, below=of rule] (rule){\textbf{\#11:} Print the train and test accuracy results.};  
+\end{tikzpicture}
+

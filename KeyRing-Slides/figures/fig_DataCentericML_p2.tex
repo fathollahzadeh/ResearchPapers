@@ -1,0 +1,43 @@
+\begin{tikzpicture}[node distance=1mm, line width=0.5pt]
+  
+  \node[draw=tug, fill=tug, minimum width=40pt, minimum height=70pt, text=white] (dataX) {\LARGE{\textbf{X}}};
+  \node[draw=tug, fill=tug, minimum width=15pt, minimum height=70pt, text=white, right=of dataX, xshift=5pt] (datay) {\LARGE{\textbf{y}}};
+
+  \node[draw=none, fill=none, minimum height=70pt, right=of datay, xshift=5pt] (pip) {
+    \shortstack[l]{
+      \texttt{\textbf{while}(!coveraged) \{} \\ \\
+       \ \ \ \ \ \ \texttt{... q = \textbf{\textcolor{tug}{X}} \%*\% v} ...\\ \\
+      \texttt{\}}
+    }
+  };
+
+  \node[draw=none, fill=none, minimum height=70pt, right=of pip, xshift=25pt] (goal) {
+    \shortstack[c]{
+      \texttt{\textcolor{tug}{\textbf{85\%}}} \\ \\
+      \texttt{Accuracy}} };
+
+  \node[above=of pip, text=blue, yshift=-10pt] (model) {\texttt{\textbf{Model Training}}};
+  \node[above=of goal, text=blue, yshift=-10pt] (score) {\texttt{\textbf{Model Scoring}}};
+  \draw[-{Latex[scale=1]}, tug, line width=1pt] (model) -- (score);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \filldraw[draw=black, fill=none] ($(dataX.north west)+(-2pt,28pt)$)  rectangle  ($(pip.south east)+(2pt,-2pt)$);
+  \filldraw[draw=black, fill=none] ($(goal.north west)+(-23pt,28pt)$)  rectangle  ($(goal.south east)+(15pt,-2pt)$);
+  \node at($(dataX.north west)+(18pt,20pt)$) {\texttt{train()}};
+  \node at($(goal.north west)+(5pt,20pt)$) {\texttt{predict()}};
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  \node[draw=none, fill=none, above=of dataX, yshift=35pt, xshift=70pt, text=white] (o1) {\textbf{\texttt{Hyperparameter Tuning + CV}}};
+
+  \node[draw=none, fill=none, above=of o1, yshift=0pt, xshift=-20pt, text=white] (o2) {\textbf{\texttt{Model and Feature Selection}}};
+
+  \node[draw=none, fill=none, above=of o2, yshift=0pt, xshift=-20pt, text=white] (o3) {\textbf{\texttt{Data Programming \& Augmentation}}};
+
+  \node[draw=none, fill=none, above=of o3, yshift=0pt, xshift=-20pt, text=white] (o4) {\textbf{\texttt{Data Integration \& Data Cleaning}}};
+
+  \node[draw=none, fill=none, above=of o4, yshift=0pt, xshift=-60pt, text=white] (o5) {\textbf{\texttt{Data Preparation}}};
+
+
+
+\end{tikzpicture}

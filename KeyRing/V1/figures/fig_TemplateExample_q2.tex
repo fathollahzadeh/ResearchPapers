@@ -1,0 +1,51 @@
+\addtolength{\tabcolsep}{-0.4em}
+
+\newcommand{\linenumber}[1]{\texttt{\textcolor{gray}{#1:}}}
+\newcommand{\textblue}[1]{\texttt{\textcolor{blue}{#1}}}
+
+\newcommand{\texttug}[1]{\texttt{\textcolor{tug}{#1}}}
+\newcommand{\texttugb}[1]{\texttt{\textcolor{tugb!120}{#1}}}
+\newcommand{\textblack}[1]{\texttt{#1}}
+\newcommand{\textorang}[1]{\texttt{\textcolor{color4}{#1}}}
+\newcommand{\textgreen}[1]{\texttt{\textcolor{black!60!green}{#1}}}
+\newcommand{\textbrown}[1]{\texttt{\textcolor{brown}{#1}}}
+\newcommand{\textbperpal}[1]{\texttt{\textcolor{perpal}{#1}}}
+\newcommand{\textdarkgreen}[1]{\textbf{\texttt{\textcolor{darkgreencode}{#1}}}}
+
+% title AS t
+\begin{tikzpicture}[node distance=0pt, line width=0.5pt, inner sep=1mm]
+
+    \node[draw=lightgray, fill=lightgray!10, xshift=3pt] (origquery2) {
+        \shortstack[l]{
+          \text{\textbf{\large{Query \#2:}}} \\ \\ \\
+          \linenumber{1} \textblack{\textblue{SELECT} \htextcodefive{\textdarkgreen{MIN}(t.\textbperpal{title}) \textblue{AS} ironman\_movie}}\\
+          \linenumber{2} \textblack{\textblue{FROM} char\_name \textblue{AS} chn,} \\
+          \quad \quad \quad \quad \textblack{title \textblue{AS} t, } \\
+          \quad \quad \quad \quad \textblack{keyword \textblue{AS} k,} \\
+          \quad \quad \quad \quad \textblack{kind\_type \textblue{AS} kt, } \\
+          \linenumber{3} \textblack{\textblue{WHERE} kt.\textbperpal{kind} = \textgreen{'movie'}} \\
+          \quad \quad \  \textblack{\textblue{AND} \htextcodetwo{(k.\textbperpal{keyword} = \textgreen{'prize'}}}\\
+          \quad \quad \quad \quad  \quad  \textblack{\htextcodetwo{\textblue{OR} k.\textbperpal{keyword} = \textgreen{'prize'})}}\\
+          \quad \quad \ \textblack{\textblue{AND}  \htextcodeone{chn.\textbperpal{name} \textblue{LIKE} \textgreen{'Dago\%'}}}\\
+          \quad \quad \ \textblack{\textblue{AND} \htextcodethree{t.\textbperpal{production\_year} > \textgreen{2015}}} \\
+         \quad \quad \ \textblack{\textblue{AND} \htextcodethree{t.\textbperpal{production\_year} > \textdarkgreen{CAST}(\textgreen{'0'} \textblue{AS BIGINT})};}
+          }}; 
+
+    \node [draw=none, fill=none, below=of origquery2, xshift=-20pt, inner xsep=0mm, yshift=-5pt ](table1) {
+      \shortstack[l]{
+        \text{\textbf{\large{Query Parameters (\p):}}} \\ \\
+        \textblack{\textcolor{tug}{\$\$\$\_A}="\textgreen{'Dago\%'"}}\\
+        \textblack{\textcolor{tug}{\$\$\$\_BC}="(\textgreen{'prize'},\textgreen{'fight'})"}\\ 
+        \textblack{\textcolor{tug}{\$\$\$\_D}="\textgreen{'movie'}"}, \ \ \ \ 
+        \textblack{\textcolor{tug}{\$\$\$\_E}=\textgreen{2015},\ \ \  \textcolor{tug}{\$\$\$\_F}=\textgreen{0}}
+      }};
+
+      
+
+    \node[inner sep=0.6mm, draw=lightgray, densely dotted, right=of origquery2, yshift=-30pt, line width=1pt] (tree) {
+      \resizebox{!}{240pt}{\includegraphics[scale=1]{img/fig_TemplateExample_q2_tree.pdf}}};   
+      
+    \node[draw=black, single arrow, minimum height=30mm, minimum width=7mm, single arrow head extend=1mm,
+              anchor=east, right=of origquery2,  xshift=-70pt, yshift=40pt, fill=black, text=white, line width=1pt]{\large{\textbf{Query Tree}}};  
+    
+\end{tikzpicture}

@@ -1,0 +1,59 @@
+% Data icons as TikZ pics, coloured per dataset.
+% Usage inside a tikzpicture:  \pic at (x,y) {<icon>=<color>};
+%
+%   tableicon  : filled table (12pt x 10pt), same thin-line style as fig_SQL and fig_LLM
+%   dbxtable   : outline table in the style of a catalog explorer (7pt x 6pt)
+%   dbxschema  : schema, three stacked layers (7pt x 6pt)
+%   dbxcatalog : catalog, a rounded box with a stacked layer (7pt x 7pt)
+\tikzset{
+    pics/tableicon/.style={
+        code={
+            % body
+            \fill[white] (-6pt,-5pt) rectangle (6pt,5pt);
+            \fill[#1!12] (-6pt,-5pt) rectangle (6pt,2pt);
+            % header row
+            \fill[#1] (-6pt,2pt) rectangle (6pt,5pt);
+            % rows and one column separator
+            \draw[#1!60, line width=0.3pt] (-6pt,-0.4pt) -- (6pt,-0.4pt);
+            \draw[#1!60, line width=0.3pt] (-6pt,-2.7pt) -- (6pt,-2.7pt);
+            \draw[#1!60, line width=0.3pt] (-1.5pt,-5pt) -- (-1.5pt,2pt);
+            % frame
+            \draw[#1, line width=0.5pt, rounded corners=0.6pt] (-6pt,-5pt) rectangle (6pt,5pt);
+        }
+    },
+    pics/tableicon/.default=argray,
+    %
+    pics/dbxtable/.style={
+        code={
+            \fill[white] (-3.5pt,-3pt) rectangle (3.5pt,3pt);
+            \fill[#1!18] (-3.5pt,1.2pt) rectangle (3.5pt,3pt);
+            \draw[#1, line width=0.35pt] (-3.5pt,1.2pt) -- (3.5pt,1.2pt);
+            \draw[#1, line width=0.25pt] (-3.5pt,-0.9pt) -- (3.5pt,-0.9pt);
+            \draw[#1, line width=0.25pt] (-1.1pt,-3pt) -- (-1.1pt,1.2pt);
+            \draw[#1, line width=0.25pt] (1.2pt,-3pt) -- (1.2pt,1.2pt);
+            \draw[#1, line width=0.45pt, rounded corners=0.5pt] (-3.5pt,-3pt) rectangle (3.5pt,3pt);
+        }
+    },
+    pics/dbxtable/.default=argray,
+    %
+    pics/dbxschema/.style={
+        code={
+            \foreach \dy/\op in {-2pt/1, 0pt/0.7, 2pt/0.45} {
+                \filldraw[draw=#1, fill=#1!15, line width=0.35pt, fill opacity=1, draw opacity=\op]
+                    (0pt,\dy+1.2pt) -- (3.5pt,\dy) -- (0pt,\dy-1.2pt) -- (-3.5pt,\dy) -- cycle;
+            }
+        }
+    },
+    pics/dbxschema/.default=argray,
+    %
+    pics/dbxcatalog/.style={
+        code={
+            \fill[#1!12] (-3.5pt,-3.5pt) rectangle (3.5pt,3.5pt);
+            \draw[#1, line width=0.45pt, rounded corners=0.8pt] (-3.5pt,-3.5pt) rectangle (3.5pt,3.5pt);
+            \fill[#1] (-2pt,0.6pt) rectangle (2pt,2pt);
+            \draw[#1, line width=0.35pt] (-2pt,-0.9pt) -- (2pt,-0.9pt);
+            \draw[#1, line width=0.35pt] (-2pt,-2.2pt) -- (2pt,-2.2pt);
+        }
+    },
+    pics/dbxcatalog/.default=argray,
+}
