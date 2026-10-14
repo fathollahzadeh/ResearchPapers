@@ -1,0 +1,291 @@
+% KeyRing end-to-end example: the project-code running example (introduction, methodology), followed through
+% the architecture of fig_KeyRing_Architecture_v2: Datasets -> (1) Column Profiler -> (2) Ring Builder
+% -> (3) Budgeted Verifier -> join graph. All values are illustrative and consistent across the steps.
+% Colours: University of Waterloo palette, as in the architecture figure:
+%   Science blue = steps and icons, Mathematics pink = key domains, gold = LLM,
+%   environment green / red / gold = accept / reject / uncertain.
+
+\providecommand{\sys}{\textsc{KeyRing}}
+\newcommand{\cn}[1]{\texttt{#1}}                                   % table or column name
+\newcommand{\vl}[1]{\texttt{\textcolor{uwgreyC!80!black}{#1}}}     % data value
+\newcommand{\hd}[1]{\textbf{\texttt{#1}}}                          % table header cell
+\newcommand{\acc}[1]{\textcolor{uwenv}{\textbf{#1}}}               % accept
+\newcommand{\rej}[1]{\textcolor{uwred}{\textbf{#1}}}               % reject
+\newcommand{\unc}[1]{\textcolor{uwgoldD}{\textbf{#1}}}             % uncertain
+\newcommand{\kd}[1]{\textcolor{uwmath}{\textbf{#1}}}               % key domain
+\newcommand{\stepttl}[2]{\textcolor{uwsci}{\textbf{#1}}\ \textbf{#2}} % sub-step title
+
+\begin{tikzpicture}[node distance=6pt, line width=0.5pt,
+    tbl/.style={draw=uwgreyB, fill=white, rounded corners=2pt, inner sep=2pt, font=\scriptsize, anchor=north west},
+    blk/.style={draw=uwgreyB, fill=white, rounded corners=2pt, inner sep=3pt, font=\scriptsize, anchor=north west, align=left},
+    band/.style={draw=uwgreyB, fill=uwgreyA!35, rounded corners=3pt, inner sep=5pt},
+    bandttl/.style={fill=uwsci, text=white, rounded corners=2pt, inner sep=2.5pt, font=\small\bfseries, anchor=south west},
+    flow/.style={-{Latex[length=4pt,width=3.4pt]}, draw=uwgreyC, line width=0.9pt},
+    small/.style={-{Latex[length=3pt,width=2.6pt]}, draw=uwgreyC, line width=0.6pt},
+    owner/.style={circle, draw=uwmath, fill=uwmath, minimum size=7pt, inner sep=0pt},
+    member/.style={circle, draw=uwmath, fill=white, minimum size=6pt, inner sep=0pt, line width=0.6pt},
+]
+    \sffamily
+    \renewcommand{\arraystretch}{1.05}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Input: six tables from three source systems, no declared keys
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[tbl] (t1) at (0,0) {%
+        \begin{tabular}{@{}lllll@{}}
+        \multicolumn{5}{@{}l}{\cn{\textbf{erp.PROJECT}} \ \textcolor{uwgreyC}{ERP, 5,000 rows}}\\\hline
+        \hd{ID} & \hd{PROJECT\_CODE} & \hd{NAME} & \hd{STATUS} & \hd{DATA}\\
+        \vl{1} & \vl{1042} & \vl{Atlas Migration} & \vl{2} & \vl{N/A}\\
+        \vl{2} & \vl{1043} & \vl{Beacon Audit} & \vl{5} & \vl{TBD}\\
+        \vl{3} & \vl{2001} & \vl{Cedar Rollout} & \vl{1} & \vl{1}\\
+        \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \node[tbl, right=of t1.north east, anchor=north west] (t2) {%
+        \begin{tabular}{@{}ll@{}}
+        \multicolumn{2}{@{}l}{\cn{\textbf{erp.PROJECT\_STG}} \ \textcolor{uwgreyC}{ERP, 812 rows}}\\\hline
+        \hd{PROJECT\_CODE} & \hd{NAME}\\
+        \vl{2001} & \vl{Cedar Rollout}\\
+        \vl{2002} & \vl{Delta Review}\\
+        \vl{3107} & \vl{Echo Upgrade}\\
+        \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \node[tbl, right=of t2.north east, anchor=north west] (t3) {%
+        \begin{tabular}{@{}lllll@{}}
+        \multicolumn{5}{@{}l}{\cn{\textbf{erp.LEDGER}} \ \textcolor{uwgreyC}{ERP, 120,000 rows}}\\\hline
+        \hd{ID} & \hd{PRJ\_ID} & \hd{LINE\_NO} & \hd{AMOUNT} & \hd{STATUS}\\
+        \vl{1} & \vl{1042} & \vl{1} & \vl{1250.00} & \vl{2}\\
+        \vl{2} & \vl{2001} & \vl{2} & \vl{310.40} & \vl{2}\\
+        \vl{3} & \vl{3107} & \vl{1} & \vl{98.00} & \vl{4}\\
+        \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \node[tbl, right=of t3.north east, anchor=north west] (t4) {%
+        \begin{tabular}{@{}lllll@{}}
+        \multicolumn{5}{@{}l}{\cn{\textbf{ts.TIMESHEET}} \ \textcolor{uwgreyC}{Timesheet, 80,000 rows}}\\\hline
+        \hd{EMP\_ID} & \hd{WEEK} & \hd{ENGAGEMENT} & \hd{HOURS} & \hd{DATA}\\
+        \vl{E17} & \vl{2026-W14} & \vl{ENG-1042} & \vl{7.5} & \vl{ok}\\
+        \vl{E17} & \vl{2026-W15} & \vl{ENG-2002} & \vl{8.0} & \vl{N/A}\\
+        \vl{E23} & \vl{2026-W14} & \vl{ENG-1042} & \vl{6.0} & \vl{1}\\
+        \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \node[tbl, right=of t4.north east, anchor=north west] (t5) {%
+        \begin{tabular}{@{}lll@{}}
+        \multicolumn{3}{@{}l}{\cn{\textbf{ts.TS\_APPROVAL}} \ \textcolor{uwgreyC}{Timesheet, 79,600 rows}}\\\hline
+        \hd{EMP\_ID} & \hd{WEEK} & \hd{APPROVER}\\
+        \vl{E17} & \vl{2026-W14} & \vl{M04}\\
+        \vl{E17} & \vl{2026-W15} & \vl{M04}\\
+        \vl{E23} & \vl{2026-W14} & \vl{M11}\\
+        \vl{\dots} & \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \node[tbl, right=of t5.north east, anchor=north west] (t6) {%
+        \begin{tabular}{@{}lll@{}}
+        \multicolumn{3}{@{}l}{\cn{\textbf{bill.INVOICE\_EXP}} \ \textcolor{uwgreyC}{Billing export, 9,300 rows}}\\\hline
+        \hd{INV\_NO} & \hd{PROJ} & \hd{TOTAL}\\
+        \vl{INV-77} & \vl{0001042} & \vl{4800.00}\\
+        \vl{INV-78} & \vl{0002001} & \vl{1120.50}\\
+        \vl{INV-79} & \vl{0001042} & \vl{260.00}\\
+        \vl{\dots} & \vl{\dots} & \vl{\dots}
+        \end{tabular}};
+    \begin{scope}[on background layer]
+        \node[band, fit=(t1)(t2)(t3)(t4)(t5)(t6)] (bandin) {};
+    \end{scope}
+    \node[bandttl] at ($(bandin.north west)+(0pt,1pt)$) {Datasets: 6 tables, 3 source systems, no declared keys};
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (1) Column Profiler: one profile per column, in one pass, without the LLM
+    %     (statistics and LLM annotation exist in the pipeline; pattern, normalization,
+    %      sketches and embedding are new)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[tbl, below=34pt of bandin.south west, anchor=north west, xshift=5pt] (prof) {%
+        \begin{tabular}{@{}l|lrr|ll|rl|ll@{}}
+        & \multicolumn{3}{c|}{\textbf{Statistics}} & \multicolumn{2}{c|}{\textbf{Pattern + Normalization}} & \multicolumn{2}{c|}{\textbf{Value Sketches}} & \multicolumn{2}{c}{\textbf{LLM Annotation + Embedding}}\\
+        \hd{Column} & \hd{type} & $u(c)$ & \hd{null} & \hd{pattern} & \hd{normalized} & \hd{HLL ndv} & \hd{MinHash $h_1..h_4$ (of 128)} & \hd{description, tag} & \hd{embedding (of 384)}\\\hline
+        \cn{PROJECT.ID}                & INT     & 1.00 & 0\%  & \vl{9{\char`\{}1,4{\char`\}}} & \vl{=}              & 5,000   & \vl{[ 3, 17, 25, 40]} & surrogate row id, --          & \vl{[0.12,-0.40, 0.05,..]}\\
+        \cn{PROJECT.PROJECT\_CODE}     & INT     & 1.00 & 0\%  & \vl{9999}     & \vl{=}              & 5,000   & \vl{[11, 46, 93, 120]} & project identifier, \kd{Project} & \vl{[0.71, 0.08,-0.22,..]}\\
+        \cn{PROJECT.STATUS}            & INT     & 0.001 & 0\% & \vl{9}        & \vl{=}              & 5       & \vl{[ 3, 17, 81, 95]} & project status code, --       & \vl{[0.02, 0.55, 0.31,..]}\\
+        \cn{PROJECT.DATA}              & VARCHAR & 0.02 & 31\% & \vl{mixed}    & \vl{=}              & 96      & \vl{[ 3, 11, 17, 46]} & free-form note, --            & \vl{[-0.10, 0.02, 0.04,..]}\\
+        \cn{PROJECT\_STG.PROJECT\_CODE} & INT    & 1.00 & 0\%  & \vl{9999}     & \vl{=}              & 812     & \vl{[11, 46, 93, 131]} & project identifier, \kd{Project} & \vl{[0.69, 0.10,-0.20,..]}\\
+        \cn{LEDGER.ID}                 & INT     & 1.00 & 0\%  & \vl{9{\char`\{}1,6{\char`\}}} & \vl{=}              & 120,000 & \vl{[ 0,  3, 11, 17]} & surrogate row id, --          & \vl{[0.13,-0.38, 0.06,..]}\\
+        \cn{LEDGER.PRJ\_ID}            & INT     & 0.04 & 0.2\% & \vl{9999}    & \vl{=}              & 4,702   & \vl{[11, 46, 93, 120]} & project of the ledger line, \kd{Project} & \vl{[0.66, 0.12,-0.18,..]}\\
+        \cn{LEDGER.LINE\_NO}           & INT     & 0.0003 & 0\% & \vl{9{\char`\{}1,2{\char`\}}} & \vl{=}           & 40      & \vl{[ 3, 17, 25, 52]} & line number in a posting, --  & \vl{[0.05, 0.21, 0.40,..]}\\
+        \cn{TIMESHEET.ENGAGEMENT}      & VARCHAR & 0.05 & 1\%  & \vl{AAA-9999} & \vl{ENG-1042$\to$1042} & 3,911 & \vl{[11, 46, 93, 140]} & client engagement worked on, \kd{Project} & \vl{[0.52, 0.30,-0.11,..]}\\
+        \cn{TIMESHEET.HOURS}           & DECIMAL & 0.001 & 0\% & \vl{9.9}      & \vl{=}              & 33      & \vl{[ 5, 17, 70, 88]} & hours worked, --              & \vl{[0.01, 0.62, 0.17,..]}\\
+        \cn{TIMESHEET.(EMP\_ID,WEEK)}  & composite & 1.00 & 0\% & \vl{A99,9999-A99} & \vl{=}          & 80,000  & \vl{[ 2,  9, 30, 61]} & employee week, Timesheet      & \vl{[0.33,-0.07, 0.48,..]}\\
+        \cn{TS\_APPROVAL.(EMP\_ID,WEEK)} & composite & 1.00 & 0\% & \vl{A99,9999-A99} & \vl{=}        & 79,600  & \vl{[ 2,  9, 30, 61]} & approved employee week, Timesheet & \vl{[0.31,-0.05, 0.47,..]}\\
+        \cn{INVOICE\_EXP.PROJ}         & VARCHAR & 0.44 & 0\%  & \vl{0009999}  & \vl{0001042$\to$1042} & 4,118 & \vl{[11, 46, 93, 120]} & project billed, \kd{Project} & \vl{[0.58, 0.04,-0.25,..]}\\
+        \end{tabular}};
+    \node[blk, right=10pt of prof.north east, anchor=north west, text width=128pt] (profnote) {%
+        \stepttl{(1a)}{Statistics} from one warehouse scan per batch of columns; $u(c)=$ distinct $/$ rows.\\[3pt]
+        \stepttl{(1b)}{Normalization} strips the prefix \vl{ENG-} and the leading zeros of \vl{0001042}, so both columns are sketched again on normalized values.\\[3pt]
+        \stepttl{(1c)}{Sketches}: HLL for ndv; MinHash for containment. Equal minima \vl{[11, 46, 93, ..]} already show that the project-code columns overlap.\\[3pt]
+        \stepttl{(1d)}{Annotation} is reused from the pipeline; the embedding encodes the column name and description, then the table name and description.};
+    \begin{scope}[on background layer]
+        \node[band, fit=(prof)(profnote)] (band1) {};
+    \end{scope}
+    \node[bandttl] at ($(band1.north west)+(0pt,1pt)$) {\textcircled{\scriptsize 1} Column Profiler: one pass, no LLM call};
+    \draw[flow] ($(bandin.south west)+(300pt,0)$) -- ($(band1.north west)+(300pt,0)$);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (2) Ring Builder: key candidates -> candidate index -> scope + prune -> rings
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[blk, below=34pt of band1.south west, anchor=north west, xshift=5pt, text width=150pt] (keyc) {%
+        \stepttl{(2a)}{Key Candidates}: $u \geq 0.95$, nulls $\leq 5\%$\\[2pt]
+        \begin{tabular}{@{}ll@{}}
+        \cn{PROJECT.ID} & 5,000\\
+        \cn{PROJECT.PROJECT\_CODE} & 5,000\\
+        \cn{PROJECT\_STG.PROJECT\_CODE} & 812\\
+        \cn{LEDGER.ID} & 120,000\\
+        \cn{TIMESHEET.(EMP\_ID,WEEK)} & 80,000 \ \textcolor{uwgreyC}{composite}\\
+        \cn{INVOICE\_EXP.INV\_NO} & 9,300
+        \end{tabular}};
+    \node[blk, right=of keyc.north east, anchor=north west] (idx) {%
+        \stepttl{(2b)}{Candidate Index}: LSH Ensemble on normalized MinHash ($\hat{c}$) and ANN on embeddings ($\cos$)\\[2pt]
+        \begin{tabular}{@{}l@{\ $\to$\ }lrrl@{}}
+        \hd{referencing column} & \hd{candidate owner} & $\hat{c}$ & $\cos$ & \\\hline
+        \cn{LEDGER.PRJ\_ID}        & \cn{PROJECT.PROJECT\_CODE} & 0.99 & 0.88 & \\
+        \cn{LEDGER.PRJ\_ID}        & \cn{PROJECT.ID}            & 1.00 & 0.21 & \textcolor{uwgreyC}{accidental: 1042 $\in$ 1..5000}\\
+        \cn{LEDGER.PRJ\_ID}        & \cn{LEDGER.ID}             & 1.00 & 0.18 & \textcolor{uwgreyC}{accidental}\\
+        \cn{PROJECT\_STG.PROJECT\_CODE} & \cn{PROJECT.PROJECT\_CODE} & 1.00 & 0.97 & \textcolor{uwgreyC}{staging copy}\\
+        \cn{INVOICE\_EXP.PROJ}     & \cn{PROJECT.PROJECT\_CODE} & 0.97 & 0.74 & \textcolor{uwgreyC}{raw: $\hat{c}=0.00$}\\
+        \cn{TIMESHEET.ENGAGEMENT}  & \cn{PROJECT.PROJECT\_CODE} & 0.95 & 0.69 & \textcolor{uwgreyC}{raw: $\hat{c}=0.00$}\\
+        \cn{LEDGER.LINE\_NO}       & \cn{PROJECT.ID}            & 1.00 & 0.09 & \textcolor{uwgreyC}{accidental: 1..40}\\
+        \cn{PROJECT.STATUS}        & \cn{PROJECT.ID}            & 1.00 & 0.05 & \textcolor{uwgreyC}{accidental: 1..5}\\
+        \cn{TIMESHEET.HOURS}       & \cn{PROJECT.ID}            & 0.40 & 0.02 & \\
+        \cn{PROJECT.DATA}          & \multicolumn{3}{l}{\textcolor{uwgreyC}{38\% of all key candidates}} & \\
+        \cn{TS\_APPROVAL.(EMP\_ID,WEEK)} & \cn{TIMESHEET.(EMP\_ID,WEEK)} & 0.99 & 0.92 & \textcolor{uwgreyC}{composite}
+        \end{tabular}};
+    \node[blk, right=of idx.north east, anchor=north west, text width=150pt] (prune) {%
+        \stepttl{(2c)}{Scope + Prune}\\[2pt]
+        \textbf{Scope}: the concept tag \kd{Project} spans ERP, Timesheet, and Billing, so candidates are kept \emph{across} source systems.\\[3pt]
+        \textbf{Prune}:\\
+        \rej{$\times$} \cn{PROJECT.DATA}: generic, matches 38\% of key candidates\\
+        \rej{$\times$} \cn{PROJECT.STATUS}: code with 5 values\\
+        \rej{$\times$} \cn{TIMESHEET.HOURS}: DECIMAL, type-incompatible with INT owners\\[3pt]
+        \textbf{Owner election}: \cn{LEDGER.PRJ\_ID} joins the ring of its best-scoring owner, \cn{PROJECT\_CODE} ($\hat{c}$ 0.99, $\cos$ 0.88), not \cn{PROJECT.ID} or \cn{LEDGER.ID}. The ring of the staging copy merges into it; the owner is the larger domain (5,000 $>$ 812).};
+
+    % (2d) rings
+    \node[blk, right=of prune.north east, anchor=north west, minimum width=250pt, minimum height=150pt] (rings) {};
+    \node[anchor=north west, font=\scriptsize, inner sep=0pt] at ($(rings.north west)+(3pt,-3pt)$) {\stepttl{(2d)}{Candidate Rings}};
+    \coordinate (r1) at ($(rings.north west)+(100pt,-70pt)$);
+    \draw[uwmath, line width=0.6pt, densely dashed] (r1) circle (34pt);
+    \node[owner, label={[font=\tiny, align=center, fill=white, inner sep=1pt]below:\cn{PROJECT.}\\\cn{PROJECT\_CODE}}] at (r1) {};
+    \foreach \a/\t in {90/{\cn{STG.PROJECT\_CODE}}, 0/{\cn{LEDGER.PRJ\_ID}}, 270/{\cn{INVOICE\_EXP.PROJ}}, 180/{\cn{TIMESHEET.ENGAGEMENT}}} {
+        \node[member] (m\a) at ($(r1)+(\a:34pt)$) {};
+    }
+    \node[font=\tiny, anchor=south] at ($(m90.north)+(0,1pt)$) {\cn{PROJECT\_STG.PROJECT\_CODE}};
+    \node[font=\tiny, anchor=west, fill=white, inner sep=1pt] at ($(m0.east)+(1pt,0)$) {\cn{LEDGER.PRJ\_ID}};
+    \node[font=\tiny, anchor=north] at ($(m270.south)+(0,-1pt)$) {\cn{INVOICE\_EXP.PROJ}};
+    \node[font=\tiny, anchor=east, fill=white, inner sep=1pt] at ($(m180.west)+(-1pt,0)$) {\cn{TIMESHEET.ENGAGEMENT}};
+    \node[font=\scriptsize, text=uwmath] at ($(r1)+(-26pt,30pt)$) {$R_1$};
+
+    \coordinate (r2) at ($(rings.north west)+(212pt,-40pt)$);
+    \draw[uwmath, line width=0.6pt, densely dashed] (r2) circle (14pt);
+    \node[owner] at (r2) {};
+    \node[member] at ($(r2)+(0:14pt)$) {};
+    \node[font=\tiny, align=center] at ($(r2)+(0,-23pt)$) {owner \cn{PROJECT.ID}\\member \cn{LEDGER.LINE\_NO}};
+    \node[font=\scriptsize, text=uwmath] at ($(r2)+(-16pt,14pt)$) {$R_2$};
+
+    \coordinate (r3) at ($(rings.north west)+(212pt,-108pt)$);
+    \draw[uwmath, line width=0.6pt, densely dashed] (r3) circle (14pt);
+    \node[owner, rounded rectangle, minimum width=12pt, minimum height=6.5pt] at (r3) {};
+    \node[member] at ($(r3)+(0:14pt)$) {};
+    \node[font=\tiny, align=center] at ($(r3)+(0,-24pt)$) {owner \cn{TIMESHEET.(EMP\_ID,WEEK)}\\member \cn{TS\_APPROVAL.(..)}};
+    \node[font=\scriptsize, text=uwmath] at ($(r3)+(-16pt,14pt)$) {$R_3$};
+
+    \draw[small] (keyc) -- (idx);
+    \draw[small] (idx) -- (prune);
+    \draw[small] (prune) -- (rings);
+    \begin{scope}[on background layer]
+        \node[band, fit=(keyc)(idx)(prune)(rings)] (band2) {};
+    \end{scope}
+    \node[bandttl] at ($(band2.north west)+(0pt,1pt)$) {\textcircled{\scriptsize 2} Ring Builder: 3 candidate rings};
+    \draw[flow] ($(band1.south west)+(300pt,0)$) -- ($(band2.north west)+(300pt,0)$);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % (3) Budgeted Verifier: calibration + optimizer -> distilled model -> cache -> ring prompt
+    %     -> SQL join check -> transitive propagation
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[blk, below=34pt of band2.south west, anchor=north west, xshift=5pt, text width=150pt] (opt) {%
+        \stepttl{(3a)}{Calibration + Optimizer}\\[2pt]
+        \textbf{Calibration}: all-pairs LLM labels on a random sample of 60 candidates of the whole database: 14 joins.\\[3pt]
+        \textbf{Optimizer}: recall target $\gamma = 0.95$, confidence $1-\delta = 0.95$\\
+        $\Rightarrow$ reject below $\tau_{lo} = 0.20$, accept above $\tau_{hi} = 0.90$\\
+        $\Rightarrow$ at most 8 candidates per prompt.};
+    \node[blk, right=of opt.north east, anchor=north west] (dist) {%
+        \stepttl{(3b)}{Distilled Model}: score from profile features\\[2pt]
+        \begin{tabular}{@{}l@{\ $\to$\ }lrl@{}}
+        \hd{member} & \hd{owner} & \hd{score} & \hd{decision}\\\hline
+        \cn{PROJECT\_STG.PROJECT\_CODE} & \cn{PROJECT\_CODE} & 0.97 & \acc{accept}\\
+        \cn{LEDGER.PRJ\_ID} & \cn{PROJECT\_CODE} & 0.93 & \acc{accept}\\
+        \cn{INVOICE\_EXP.PROJ} & \cn{PROJECT\_CODE} & 0.71 & \unc{uncertain}\\
+        \cn{TIMESHEET.ENGAGEMENT} & \cn{PROJECT\_CODE} & 0.46 & \unc{uncertain}\\
+        \cn{LEDGER.LINE\_NO} & \cn{PROJECT.ID} & 0.06 & \rej{reject}\\
+        \cn{TS\_APPROVAL.(EMP\_ID,WEEK)} & \cn{TIMESHEET.(..)} & 0.94 & \acc{accept}
+        \end{tabular}\\[3pt]
+        \textbf{Verdict cache}: $R_1$ has uncertain members and no cached verdict $\Rightarrow$ 1 prompt.\\
+        $R_2$ loses its only member $\Rightarrow$ dropped. $R_3$ has none uncertain $\Rightarrow$ no prompt.};
+    \node[blk, right=of dist.north east, anchor=north west, text width=215pt, draw=uwgoldD, fill=uwgoldA!25] (llm) {%
+        \stepttl{(3c)}{Ring Prompt for $R_1$}: one LLM call\\[2pt]
+        \ttfamily\tiny
+        Owner: erp.PROJECT.PROJECT\_CODE (INT, unique, 5,000 values)\\
+        \ \ "project identifier"; e.g. 1042, 1043, 2001\\
+        Accepted members: PROJECT\_STG.PROJECT\_CODE, LEDGER.PRJ\_ID\\
+        Uncertain candidates:\\
+        \ \ 1. bill.INVOICE\_EXP.PROJ "project billed"; e.g. 0001042, 0002001\\
+        \ \ \ \ \ normalized 1042, 2001; containment 0.97\\
+        \ \ 2. ts.TIMESHEET.ENGAGEMENT "client engagement worked on";\\
+        \ \ \ \ \ e.g. ENG-1042, ENG-2002; normalized 1042, 2002; containment 0.95\\
+        Is the owner a business key? Which candidates refer to it?\\[3pt]
+        \normalfont\scriptsize\textbf{LLM answer}: \ttfamily\tiny\{owner: confirmed, members: [1, 2]\}\\[2pt]
+        \normalfont\scriptsize Both answers become labels for the distilled model (cold start).};
+    \node[blk, right=of llm.north east, anchor=north west, text width=150pt] (sqlc) {%
+        \stepttl{(3d)}{SQL Join Check}: exact containment of members accepted by the distilled model\\[2pt]
+        \begin{tabular}{@{}lrl@{}}
+        \cn{PROJECT\_STG.PROJECT\_CODE} & 1.000 & \acc{\faCheck}\\
+        \cn{LEDGER.PRJ\_ID} & 0.998 & \acc{\faCheck}\\
+        \cn{TS\_APPROVAL.(EMP\_ID,WEEK)} & 1.000 & \acc{\faCheck}
+        \end{tabular}\\[5pt]
+        \stepttl{(3e)}{Transitive Propagation}: the 4 confirmed members of $R_1$ give 4 member$\to$owner joins, and $\binom{4}{2} = 6$ member$\leftrightarrow$member joins follow without an LLM call, e.g., \cn{LEDGER.PRJ\_ID} $=$ norm(\cn{INVOICE\_EXP.PROJ}).};
+    \draw[small] (opt) -- (dist);
+    \draw[small] (dist) -- (llm);
+    \draw[small] (llm) -- (sqlc);
+    \begin{scope}[on background layer]
+        \node[band, fit=(opt)(dist)(llm)(sqlc)] (band3) {};
+    \end{scope}
+    \node[bandttl] at ($(band3.north west)+(0pt,1pt)$) {\textcircled{\scriptsize 3} Budgeted Verifier: 1 LLM call for 6 candidates};
+    \draw[flow] ($(band2.south west)+(300pt,0)$) -- ($(band3.north west)+(300pt,0)$);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Output: join graph, cost, incremental update
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \node[blk, below=34pt of band3.south west, anchor=north west, xshift=5pt, minimum width=330pt, minimum height=104pt] (graph) {};
+    \node[anchor=north west, font=\scriptsize, inner sep=0pt] at ($(graph.north west)+(3pt,-3pt)$) {\stepttl{}{Join Graph $G(\mathcal{R})$} \textcolor{uwgreyC}{(stored in Neo4j)}};
+    \coordinate (g1) at ($(graph.north west)+(110pt,-58pt)$);
+    \node[owner, minimum size=9pt] (go) at (g1) {};
+    \foreach \a/\t/\anc in {150/{PROJECT\_STG.PROJECT\_CODE}/east, 30/{LEDGER.PRJ\_ID}/west, 210/{INVOICE\_EXP.PROJ}/east, 330/{TIMESHEET.ENGAGEMENT}/west} {
+        \node[member, minimum size=7pt] (gm\a) at ($(g1)+(\a:40pt)$) {};
+        \draw[-{Latex[scale=0.7]}, uwmath, line width=0.7pt] (gm\a) -- (go);
+        \node[font=\tiny, anchor=\anc, inner sep=1pt] at ($(gm\a)+(\a:5pt)$) {\cn{\t}};
+    }
+    % owner label after the edges, so it is drawn on top of them
+    \node[font=\tiny, anchor=north, fill=white, inner sep=1pt] at ($(go.south)+(0,-3pt)$) {\cn{PROJECT.PROJECT\_CODE}};
+    \coordinate (g3) at ($(graph.north west)+(270pt,-55pt)$);
+    \node[owner, rounded rectangle, minimum width=14pt, minimum height=8pt] (g3o) at (g3) {};
+    \node[member, minimum size=7pt] (g3m) at ($(g3)+(0,30pt)$) {};
+    \draw[-{Latex[scale=0.7]}, uwmath, line width=0.7pt] (g3m) -- (g3o);
+    \node[font=\tiny, anchor=south] at ($(g3m.north)+(0,1pt)$) {\cn{TS\_APPROVAL.(EMP\_ID,WEEK)}};
+    \node[font=\tiny, anchor=north] at ($(g3o.south)+(0,-2pt)$) {\cn{TIMESHEET.(EMP\_ID,WEEK)}};
+    \node[font=\tiny, text=uwgreyC, anchor=south west] at ($(graph.south west)+(3pt,3pt)$) {5 edges, a star per key domain; no edge to \cn{PROJECT.ID}, \cn{LEDGER.ID}, \cn{STATUS}, or \cn{DATA}.};
+
+    \node[blk, right=of graph.north east, anchor=north west, text width=165pt] (cost) {%
+        \stepttl{}{Cost}\\[2pt]
+        All-pairs prompting: $\binom{6}{2} = 15$ prompts for these 6 tables, each with two schemas and sample rows.\\[2pt]
+        \sys: 1 ring prompt, plus the calibration sample, which is shared by the whole database.};
+    \node[blk, right=of cost.north east, anchor=north west, text width=165pt] (incr) {%
+        \stepttl{}{Next day: incremental update}\\[2pt]
+        A new table \cn{fin.BUDGET} arrives with \cn{PROJECT\_NO} (\vl{1042}, \vl{3107}, ..). Its profile is sketched, the index finds owner \cn{PROJECT\_CODE} ($\hat{c}$ 0.98, $\cos$ 0.86), and it joins $R_1$ without a rebuild.};
+    \begin{scope}[on background layer]
+        \node[band, fit=(graph)(cost)(incr)] (bandout) {};
+    \end{scope}
+    \node[bandttl] at ($(bandout.north west)+(0pt,1pt)$) {Output};
+    \draw[flow] ($(band3.south west)+(300pt,0)$) -- ($(bandout.north west)+(300pt,0)$);
+\end{tikzpicture}

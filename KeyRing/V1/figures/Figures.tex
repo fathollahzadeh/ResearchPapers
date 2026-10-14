@@ -1,7 +1,16 @@
-\documentclass[sigconf,pdfa]{acmart}
+\documentclass[sigconf]{acmart} % no pdfa: it puts a stray comma into every externalized figure
 \input{setting_package.tex}  % local copy, figures/ is self-contained
 \input{setting_draw.tex}
 \input{setting_uwcolors.tex} % University of Waterloo brand colours
+\usetikzlibrary{shapes.misc} % rounded rectangle: composite ring owners
+\usetikzlibrary{backgrounds} % bands behind the steps of the end-to-end example
+\providecommand{\sys}{\textsc{KeyRing}} % system name; keep in sync with ../keyring_macros.tex
+
+% Each externalized figure is a one-page job: tell the kernel the last page is page 1, so its
+% shipout/lastpage hook runs there and no "Temporary page!" is added as a second page.
+\makeatletter
+\tikzifexternalizing{\AtBeginDocument{\gdef\@abspage@last{1}}}{}
+\makeatother
 
 \begin{document}
 
@@ -83,8 +92,15 @@
 \tikzsetnextfilename{fig_KeyRing_Architecture}
     \begin{figure*}[h]
         \centering
-        \input{fig_KeyRing_Architecture_v1.tex}
-        \caption{KeyRing Arch.}
+        \input{fig_KeyRing_Architecture_v2.tex}
+        \caption{\sys{} Arch.}
+\end{figure*}
+
+\tikzsetnextfilename{fig_KeyRing_Example}
+    \begin{figure*}[h]
+        \centering
+        \resizebox{\textwidth}{!}{\input{fig_KeyRing_Example_v1.tex}}
+        \caption{\sys{} end-to-end example.}
 \end{figure*}
 
 % \tikzsetnextfilename{fig_SQL}

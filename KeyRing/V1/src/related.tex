@@ -2,7 +2,7 @@
 \label{sec:background}
 In this section, we review the three categories of join discovery from Table~\ref{tab:intro-landscape}: non-LLM, LLM-based, and hybrid.
 For each category, we describe how it decides joins and where it falls short on enterprise databases.
-We then formalize cost-bounded join key discovery.
+We then review how profiling metadata is collected and provided to LLMs, and formalize cost-bounded join key discovery.
 
 \subsection{Non-LLM Join Discovery}
 \label{sec:bg_nonllm}
@@ -103,6 +103,39 @@ Applied to table or column pairs, a semantic join still judges every pair indepe
 It does not use the structure of join keys: the referenced side is unique, the referencing side is contained in it, and many tables share one key.
 FDJ shows that linear per-record extraction can replace quadratic per-pair decisions.
 \ourmethod applies this principle to schemas, with key domains as the extracted structure.
+
+\subsection{Profiling Metadata for LLMs}
+\label{sec:bg_metadata}
+All methods above consume column profiles, and LLM-based methods must also fit a description of each column into a prompt.
+We review how dependencies are discovered and stored, how LLMs annotate columns, and how metadata is selected for a prompt.
+
+\introparagraph{Dependency Discovery and Profile Stores} Data profiling computes metadata such as unique column combinations (UCCs), functional dependencies (FDs), and INDs~\cite{ProfilingSurvey}.
+Metanome~\cite{Metanome} bundles discovery algorithms for these dependencies.
+HyFD~\cite{HyFD} and HyUCC~\cite{HyUCC} combine approximation on samples with validation to find all minimal FDs and UCCs, and BINDER~\cite{BINDER} finds all INDs by partitioning the value sets of all columns.
+The number of candidate dependencies grows exponentially with the number of columns, so exact discovery over a full warehouse is expensive.
+Approximate algorithms reduce this cost.
+FAIDA~\cite{FAIDA} tests IND candidates on HyperLogLog sketches and samples, and reports no false positives in its evaluation; Pyro~\cite{Pyro} discovers approximate FDs and UCCs that tolerate errors in the data.
+DynFD~\cite{DynFD} maintains FDs as the data changes, instead of discovering them again.
+Metacrate~\cite{Metacrate} stores them as a queryable database of data profiles.
+Wan and Han~\cite{ValueDriven} argue that a valid dependency is not always a useful one: discovery should target the dependencies whose value for a downstream task exceeds the cost to discover and maintain them.
+
+\introparagraph{LLM-based Profiling and Annotation} LLMs annotate columns with semantic types without task-specific training~\cite{DBLP:conf/vldb/KoriniB23,ArcheType}, and write column descriptions for catalogs and downstream tasks~\cite{TACO}.
+Dependencies can also come from the LLM, not the data: LLMClean~\cite{LLMClean} lets an LLM derive ontological FDs from a table and uses them to detect errors.
+DBAutoDoc~\cite{DBAutoDoc} documents databases without declared keys.
+It combines statistical analysis with iterative LLM refinement, which propagates corrections along the schema's dependency graph, and its statistical stage improves foreign-key detection by 23 F1 points over an LLM-only approach.
+
+\introparagraph{Selecting Metadata for LLM Prompts} A profile helps an LLM only if its relevant part fits into the prompt.
+Shkapenyuk et al.~\cite{AutoMetadataT2S} summarize database profiles with an LLM and select schema elements for text-to-SQL with a recall-oriented schema linking algorithm.
+On BIRD with GPT-4o, profile-based metadata raises execution accuracy from 49.8\% to 61.2\%, and schema linking raises it to 63.2\%~\cite{AutoMetadataT2S}.
+REVEAL~\cite{REVEAL} annotates a column with a compact subset of the other columns of its table, selected for relevance and diversity, instead of the whole table, and improves column type and column property annotation.
+
+\introparagraph{Limitations} These works either collect dependencies or select context, but not both for one task.
+Profiling systems discover all valid dependencies of a type and leave their use to the application.
+Context selection methods choose columns or schema elements, not dependencies.
+To our knowledge, no method decides which dependencies to discover, and which to show the LLM, for a given column and task under a token budget.
+Join discovery needs exactly this decision.
+An IND into a unique column suggests a reference, the description of the referenced key tells the LLM what the referencing column means, and most other dependencies do not affect the decision.
+\ourmethod makes this selection with key domains: a ring prompt contains the owner of a key domain and its candidate members, together with the profile evidence that connects them.
 
 \subsection{Problem Formulation}
 \label{sec:problem}
