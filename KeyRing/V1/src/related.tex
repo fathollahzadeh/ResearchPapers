@@ -53,14 +53,16 @@ This resolves the cases that defeat non-LLM methods: an LLM recognizes that \tex
 
 \introparagraph{All-Pairs Prompting} Current practice in enterprise data platforms, including the production pipeline we study, discovers joins in three LLM steps.
 First, the LLM annotates every table: it tags its columns with semantic types and writes a description.
-Second, it groups related tables into \emph{concepts}, which are clusters of tables with overlapping data or a shared business topic.
-Third, it discovers joins: for each pair of tables or concepts, a prompt contains both schemas, their annotations, and sample rows, and the LLM decides whether the pair joins and returns the key columns.
+Second, it tags each table with the \emph{concepts} of a business data model, such as project or invoice, whose data the table holds.
+Third, it discovers joins pair by pair.
+For each pair of tables, one prompt removes the columns that cannot be keys, a second prompt selects the candidate key columns of one table, and one further prompt per candidate lists all columns of the other table with their descriptions and sample values and returns the matching columns.
+Warehouse queries then score the matches by value overlap and uniqueness and assemble a composite key greedily.
 The first two steps make one LLM call per table or per batch of tables, so their cost is linear in the number of tables.
 The third step dominates the cost.
 
-\introparagraph{Limitations} All-pairs prompting is accurate, but it faces three limitations.
+\introparagraph{Limitations} All-pairs prompting is accurate, but it faces four limitations.
 First, its cost grows quadratically.
-A database with $n$ tables needs $n(n-1)/2$ calls, about 50M calls for 10K tables, and each call carries two schemas and sample rows.
+A database with $n$ tables needs $n(n-1)/2$ pair evaluations, about 32M for 8K tables, and each evaluation makes $2 + c$ LLM calls for $c$ candidate columns, most of which carry a full schema and sample values.
 In our databases, only \todo{Z}\% of the pairs join, so almost all calls return ``no join''.
 Second, its calls are redundant.
 If $k$ tables reference one key, the LLM answers $O(k^2)$ questions whose answers follow from $k$ references to the owner of the key.
@@ -68,6 +70,8 @@ Third, its answers are independent, so nothing makes them consistent.
 The LLM may confirm that $A$ joins $B$ and $B$ joins $C$ on the same key but reject that $A$ joins $C$.
 It also cannot see global evidence that is obvious across pairs: in one of our databases, it linked a generic column named \texttt{DATA} to \todo{1,826} other columns, one pair at a time.
 The resulting join graph contains cliques of redundant edges and false edges that are hard to remove afterwards.
+Fourth, it is incremental only in the trivial sense.
+It skips pairs it has already evaluated, so a new table costs $n$ new pair evaluations, and every evaluation re-derives facts that earlier pairs already established, such as which column of a table holds customer identifiers.
 
 \subsection{Hybrid Join Discovery}
 \label{sec:bg_hybrid}
@@ -139,7 +143,9 @@ An IND into a unique column suggests a reference, the description of the referen
 
 \subsection{Problem Formulation}
 \label{sec:problem}
-Let $\mathcal{D}$ be a database with tables $\mathcal{T} = \{T_1, \ldots, T_n\}$, and let $\mathcal{C}$ be the set of all their columns.
+Let $\mathcal{D}$ be the database of one business, with tables $\mathcal{T} = \{T_1, \ldots, T_n\}$, and let $\mathcal{C}$ be the set of all their columns.
+A business typically has 50 to 8K tables.
+Businesses are independent: every definition below is relative to one $\mathcal{D}$, and joins across businesses are out of scope.
 Each column $c \in \mathcal{C}$ has a name, an optional LLM annotation (semantic type and description), and a set of values $V(c)$.
 We write $u(c) = |\mathrm{distinct}(V(c))| / |V(c)|$ for its uniqueness, and $\mathrm{cont}(a, b) = |V(a) \cap V(b)| / |V(a)|$ for the containment of $a$ in $b$.
 
@@ -183,14 +189,24 @@ The recall of $\hat{J}$ with respect to the oracle is $\mathrm{rec}(\hat{J}) = |
 \begin{equation}
 \min_{\mathcal{A}} \ \mathrm{cost}(\mathcal{A}) \quad \text{s.t.} \quad \Pr\left[\mathrm{rec}(\hat{J}) \geq \gamma\right] \geq 1 - \delta,
 \end{equation}
-subject to four requirements.
+subject to five requirements.
 \begin{itemize}[leftmargin=*]
 \item \emph{(R1) Recall-guaranteed:} $\hat{J}$ keeps at least a fraction $\gamma$ of the oracle joins with probability at least $1-\delta$, where the probability is over the random samples the method draws.
 \item \emph{(R2) Domain-proportional:} the number of LLM calls grows with the number of key domains and uncertain candidates, not with the number of table pairs.
 \item \emph{(R3) Label-free:} the method needs no labeled joins and no corpus of similar schemas. It may learn only from the oracle answers it pays for.
 \item \emph{(R4) Consistent:} $\hat{J}$ is induced by rings, so every referencing column points to the owner of its key domain, and joins implied by transitivity are not stored as separate edges.
+\item \emph{(R5) Online:} when a table arrives, the method updates $\hat{J}$ at a cost that grows with the size of the new table and of the rings it affects, not with $n$, and the final $\hat{J}$ does not depend on the order in which tables arrive.
 \end{itemize}
 A precision constraint can be added in the same form; we report precision for all methods.
+
+\introparagraph{Online Setting} Tables arrive over time.
+Let $T_1, T_2, \ldots$ be the order of arrival, $\mathcal{D}_t = \{T_1, \ldots, T_t\}$ the business after $t$ arrivals, and $J^*_t$ the oracle join set of $\mathcal{D}_t$.
+On the arrival of $T_{t+1}$, a method receives its columns and their profiles and annotations, and returns the updated join set $\hat{J}_{t+1}$.
+It may add edges incident to $T_{t+1}$, and it may also revise earlier edges, for example when $T_{t+1}$ holds a better owner for an existing ring.
+Requirement R1 must hold after every arrival, with $J^*_t$ as the reference, and the objective is the total LLM cost over the whole sequence.
+The batch problem above is the special case of a single arrival that contains all tables.
+
 In Table~\ref{tab:intro-landscape}, non-LLM methods meet R2 and R4 at best but have no oracle-level semantics, and Auto-BI violates R3.
-All-pairs prompting is the oracle itself and violates R2 and R4.
-Hybrid semantic joins meet R1 and R3 for a given pair of tables, but applied to join discovery they violate R2 and R4.
+All-pairs prompting is the oracle itself and violates R2, R4, and R5, because each arrival costs $n$ new pair evaluations.
+Hybrid semantic joins meet R1 and R3 for a given pair of tables, but applied to join discovery they violate R2, R4, and R5.
+Joinable-table search meets the cost part of R5, because a new column is a single index lookup, but it returns ranked candidates rather than joins.

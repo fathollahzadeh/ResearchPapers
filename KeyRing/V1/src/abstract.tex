@@ -1,11 +1,12 @@
 \begin{abstract}
 % 1. State the problem
 Analytics, BI, and LLM agents over enterprise data first need a join graph: which tables join, on which keys, and in which direction.
-Enterprise databases with hundreds to tens of thousands of tables rarely declare these keys.
+Each business in an enterprise platform has 50 to 8K tables, rarely declares these keys, and keeps adding tables.
 % 2. Say why it's an interesting problem
 Non-LLM methods, such as inclusion-dependency discovery, learned foreign-key detectors, and joinable-table search, are cheap but decide joins from value overlap and names alone.
 They accept accidental overlaps of surrogate IDs, codes, and dates, and they miss true joins whose values are only partially contained or formatted differently.
-LLM-based methods add the semantics these methods lack, but current practice sends every pair of tables to the LLM: about 50M calls for 10K tables, and almost all of them return ``no join''.
+LLM-based methods add the semantics these methods lack, but current practice sends every pair of tables to the LLM: about 32M calls for 8K tables, and almost all of them return ``no join''.
+Each new table then costs one more prompt for every existing table.
 Hybrid methods cluster tables by topic or route each pair through a cheap proxy before the LLM, but topics are not key domains, proxies inherit the failures of non-LLM signals, and every pair is still judged independently.
 % 3. Say what your solution achieves
 We present \ourmethod, a hybrid system that discovers join keys with LLM calls proportional to the number of \emph{key domains}, not the number of table pairs.
@@ -14,6 +15,8 @@ We present \ourmethod, a hybrid system that discovers join keys with LLM calls p
 It uses the LLM for what only the LLM does well: it verifies the semantics of each ring once, together with a few uncertain candidates.
 A cost-based optimizer routes each candidate to a local model distilled from earlier LLM decisions or to the LLM, so that \ourmethod keeps a target recall of the all-pairs LLM baseline with a user-given confidence.
 Joins follow from ring membership, so the resulting graph is a star around each key owner instead of a clique of redundant edges.
+\ourmethod runs online: when a table arrives, it looks up the new columns in its indexes and verifies only the rings they affect, so the cost of an arrival does not grow with the number of tables.
 % 4. Say what follows from your solution
-On \todo{N} enterprise databases with up to \todo{10K} tables and on public benchmarks, \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$ and tokens by \todo{Y}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins.
+On \todo{N} enterprise databases with up to \todo{8K} tables and on public benchmarks, \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$ and tokens by \todo{Y}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins.
+When tables arrive one at a time, \ourmethod adds each table with \todo{V}$\times$ fewer LLM calls than pairwise prompting and returns the same graph as a batch run.
 \end{abstract}

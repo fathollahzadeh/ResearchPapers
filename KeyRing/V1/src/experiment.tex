@@ -1,3 +1,5 @@
 \section{Experiments}
 \label{sec:experiments}
 \todo{Datasets, baselines (non-LLM, all-pairs LLM, hybrid), cost and quality results.}
+\todo{Online experiments: replay each business's tables in creation order; LLM calls, tokens, and latency per arrival vs.\ pairwise prompting (new table $\times$ all tables) and a bootstrap rerun; recall after each arrival; graph after the last arrival vs.\ a single bootstrap run; random arrival orders for order independence.}
+\todo{Redundant edges downstream: number of distinct shortest join paths per table pair, how often a shortcut edge changes the chosen path, and prompt tokens of the full vs.\ the ring graph.}

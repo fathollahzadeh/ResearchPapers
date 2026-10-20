@@ -5,8 +5,10 @@ Enterprise data platforms ingest the databases of many business units, ERP syste
 Before analysts, BI tools, or LLM agents can query this data, the platform needs a \emph{join graph}: which tables join, on which key columns, and in which direction.
 Text-to-SQL over large schemas~\cite{Spider2} and automatic BI modeling~\cite{AutoBI} both depend on it.
 However, enterprise databases rarely declare foreign keys.
-Tables arrive as staging copies, snapshots, and exports, and one business can have 50 to 10K tables.
+Tables arrive as staging copies, snapshots, and exports, and one business can have 50 to 8K tables.
 The join graph must therefore be discovered from the data and its metadata.
+It is also never finished: the platform onboards new source systems and exports, so tables keep arriving, and each new table must be linked to the graph before it can be queried.
+We discover joins within one business; joins across businesses are out of scope.
 
 \introparagraph{Example} Consider a project-based services firm with \todo{2,010} tables.
 A \emph{project code} identifies a project in the project master table, and \todo{k} other tables reference it: ledgers, timesheets, invoices, budgets, and their staging copies and snapshots.
@@ -34,11 +36,14 @@ However, on the example above they fail in four ways.
 An LLM can tell that \texttt{ENGAGEMENT} holds project codes and that a surrogate \texttt{ID} does not reference a status table.
 Current practice therefore sends every pair of tables (source and target) to an LLM, which decides whether the pair joins and returns the key.
 This approach is accurate, but its cost grows quadratically with the number of tables.
-A business with $n$ tables needs $n(n-1)/2$ LLM calls: about 500K calls for 1K tables and about 50M calls for 10K tables.
-Each call carries two schemas and sample rows, so a single business costs \todo{\$X} in tokens and \todo{Y} hours of inference.
+A business with $n$ tables needs $n(n-1)/2$ pair evaluations: about 500K for 1K tables and about 32M for 8K tables.
+Each evaluation is itself several LLM calls that carry schemas, descriptions, and sample values, so a single business costs \todo{\$X} in tokens and \todo{Y} hours of inference.
+The cost does not stop after the first build: every new table is evaluated against all $n$ existing tables, and nothing learned from earlier pairs is reused.
 The calls are also mostly wasted: only \todo{Z}\% of the table pairs in our databases join.
 In the example, the LLM is asked about each of the $\binom{k+1}{2}$ pairs among the project tables, although the answers follow from the $k$ references to the project master.
 Independent answers can also contradict each other, and they add a clique of redundant edges to the join graph.
+Redundant edges are not harmless.
+Downstream tools that pick one join path per table pair choose among the equivalent paths arbitrarily, so a new shortcut edge can silently change which tables and keys a query uses, and every extra edge is paid for once when it is discovered and again whenever the graph is placed in a prompt (\todo{measure on production}).
 
 \introparagraph{Hybrid Join Discovery} A natural fix is to combine cheap methods with the LLM.
 Hybrids do so in two ways.
@@ -68,10 +73,13 @@ The number of LLM calls still grows with the number of candidate pairs.
 
 \introparagraph{Problem and Challenges} Given a database without declared keys and an LLM, we aim to discover its join keys with as few LLM calls as possible, while keeping a target recall of the all-pairs LLM baseline.
 Table~\ref{tab:intro-landscape} compares one representative per category against this goal.
-Meeting it is hard for three reasons.
+Because tables keep arriving, the system must also link each new table at a cost that does not grow with the size of the business.
+Meeting these goals is hard for four reasons.
 First, the candidate space is quadratic and almost all of it is empty, so pruning must remove nearly all pairs before any LLM call, yet every true join it drops is lost silently.
 Second, the cheap signals that pruning relies on are exactly the ones that fail in non-LLM methods.
 Third, pairwise decisions ignore the structure of key domains, so they are redundant and can be inconsistent.
+Fourth, an online system sees the tables in an arbitrary order.
+A table that arrives late may be the true owner of a key that many earlier tables reference, so earlier decisions must be revised, and the result should not depend on the order of arrival.
 
 \introparagraph{Our Insight} Enterprise joins are not spread evenly over table pairs.
 They concentrate on a small number of \emph{key domains}, such as customer, project, employee, or invoice identifiers.
@@ -86,7 +94,7 @@ Non-LLM signals are reliable for uniqueness and for proposing candidates with hi
 The LLM is reliable for meaning, but too expensive to apply to every pair.
 
 \introparagraph{System Overview} This paper presents \ourmethod\footnote{\ourmethod holds all columns of one key domain together, like keys on a ring. The code is available to reviewers at \url{https://anonymous.4open.science/r/KeyRing}.}, a hybrid system that discovers join keys with LLM calls proportional to the number of key domains.
-\ourmethod has three components.
+\ourmethod has three core components.
 First, the \emph{Column Profiler} reads the data once and computes sketches of each column's values, its uniqueness, type, value pattern, and normalized formats, and an embedding of its name and description.
 No later step reads raw data.
 Second, the \emph{Ring Builder} generates candidates with containment and embedding indexes, tuned for recall rather than precision.
@@ -98,11 +106,21 @@ A cost-based optimizer chooses thresholds and batches so that \ourmethod keeps a
 Confirmed rings propagate joins by transitivity without further LLM calls.
 The output join graph is a star around each owner, not a clique of redundant edges.
 
+\ourmethod runs in two modes over the same state: profiles, indexes, rings, and the distilled model.
+In \emph{bootstrap} mode, it builds the rings of a business from all its tables.
+In \emph{online} mode, it links one arriving table: it profiles only the new columns, looks them up in the existing indexes, and assigns each key-like column to a ring or starts a new one.
+A fourth component, the \emph{Ring Maintainer}, revises the affected rings when an arrival changes them: it elects a better owner, merges two rings that the new table connects, or splits a ring that verification shows to mix two domains.
+The Budgeted Verifier then checks only the affected rings.
+Each change updates the edges of one ring, so the cost of an arrival grows with the size of the new table and of the rings it touches, not with the number of tables.
+Bootstrap is the special case in which all tables arrive at once, and we show that the final rings do not depend on the order of arrival.
+
 \introparagraph{Contributions} Our primary contribution is \ourmethod, a holistic and practical hybrid system for join key discovery over thousands of tables that is more accurate than non-LLM methods and whose LLM cost grows with the number of key domains, not with the number of table pairs.
 Our detailed technical contributions are:
 \begin{itemize}[leftmargin=*]
 \item An analysis of why non-LLM, LLM-based, and hybrid join discovery fail on enterprise databases, a formalization of cost-bounded join key discovery with a recall target relative to an LLM oracle, and a system architecture that solves it by discovering key domains instead of judging table pairs (Sections~\ref{sec:background} and~\ref{sec:architecture}).
 \item A ring builder that turns one pass of column profiling into key-domain candidates with elected owners, using containment and embedding indexes, format normalization, and pruning of generic columns (Section~\ref{sec:ring_builder}).
 \item A budgeted verifier that combines a distilled local model, batched LLM prompts per ring, and transitive propagation, and a cost-based optimizer that meets a recall target with statistical guarantees (Section~\ref{sec:verifier}).
-\item A comprehensive evaluation on \todo{N} production enterprise databases with up to \todo{10K} tables and on public benchmarks, against non-LLM methods (inclusion-dependency discovery, Auto-BI, joinable-table search), all-pairs LLM prompting, and hybrid methods (Section~\ref{sec:experiments}). \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$, tokens by \todo{Y}$\times$, and end-to-end time by \todo{W}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins.
+\item An online mode that links each arriving table by index lookups and verification of the affected rings only, with a ring maintainer that re-elects owners and merges or splits rings, so that the cost of an arrival is independent of the number of tables and the result is independent of the order of arrival (Section~\ref{sec:online}).
+\item A comprehensive evaluation on \todo{N} production enterprise databases with up to \todo{8K} tables and on public benchmarks, against non-LLM methods (inclusion-dependency discovery, Auto-BI, joinable-table search), all-pairs LLM prompting, and hybrid methods (Section~\ref{sec:experiments}). \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$, tokens by \todo{Y}$\times$, and end-to-end time by \todo{W}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins.
+Replaying the tables of each business in their creation order, \ourmethod links each arriving table with \todo{V}$\times$ fewer LLM calls than pairwise prompting and ends with the same graph as a bootstrap run.
 \end{itemize}

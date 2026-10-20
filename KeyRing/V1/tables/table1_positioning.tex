@@ -72,6 +72,13 @@ calls the LLM per table pair, hybrids still judge pairs independently;
  & \xmark{}
  & \cmark{} star per key domain \\
 \cmidrule{1-6}
+\textbf{Cost to link a new table}
+ & \xmark{} re-solve global graph
+ & \cmark{} index lookup
+ & \xmark{} $n$ pair prompts
+ & \xmark{} $n$ pair operators
+ & \cmark{} affected rings only \\
+\cmidrule{1-6}
 % TODO(Saeed): fill from the experiments on the largest production database.
 \textbf{F1; cost} (\todo{N} tables)
  & \todo{F1}; no LLM

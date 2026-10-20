@@ -1,17 +1,25 @@
 \section{The \ourmethod System Architecture}
 \label{sec:architecture}
 
-\ourmethod has three components that run as a pipeline.
+\ourmethod has three core components that run as a pipeline, and a fourth, the Ring Maintainer, that updates their result when a table arrives.
 First, the \emph{Column Profiler} reads the data once and summarizes every column.
 Second, the \emph{Ring Builder} turns these summaries into candidate key domains, called rings, without any LLM call.
 Third, the \emph{Budgeted Verifier} decides which candidates need the LLM, verifies each ring with one batched prompt, and returns the join graph.
 Only the third component calls the LLM.
-Figure~\ref{fig:system_arch} shows the three components and the data that flows between them.
+Figure~\ref{fig:system_arch} shows the three core components along the top, the Ring Maintainer and the path of an arriving table along the bottom, and the data that flows between them.
+Grey cards are components that the production pipeline already has; \ourmethod reuses them.
+
+\introparagraph{Two Modes} The components keep their state between runs: the profiles, the two candidate indexes, the rings with their owners, the distilled model and its thresholds, and the join graph.
+\ourmethod uses this state in two modes.
+In \emph{bootstrap} mode, it runs the pipeline over all tables of a business, when the business is onboarded or rebuilt.
+In \emph{online} mode, it links one arriving table.
+The profiler summarizes only the new columns, the Ring Builder looks them up in the existing indexes instead of rebuilding the rings, a fourth component, the \emph{Ring Maintainer}, applies the resulting changes to the affected rings, and the Budgeted Verifier checks only those rings.
+Both modes share the same candidate generation, scoring, and verification, so a ring confirmed in one mode is valid in the other.
 
 \begin{figure*}[t]
     \centering
     \resizebox{\textwidth}{!}{\includegraphics{figures/img/fig_KeyRing_Architecture}}
-    \caption{\ourmethod architecture: the \textbf{Column Profiler} summarizes every column in one pass without the LLM; the \textbf{Ring Builder} groups candidate key columns into rings, one per key domain, each with an owner; the \textbf{Budgeted Verifier} accepts or rejects confident candidates with a distilled model, verifies each ring with one batched LLM prompt, and propagates joins by transitivity, so that the join graph keeps a target recall of the all-pairs LLM baseline.}
+    \caption{\ourmethod architecture: the \textbf{Column Profiler} summarizes every column in one pass without the LLM; the \textbf{Ring Builder} groups candidate key columns into rings, one per key domain, each with an owner; the \textbf{Budgeted Verifier} accepts or rejects confident candidates with a distilled model, verifies each ring with one batched LLM prompt, and propagates joins by transitivity, so that the join graph keeps a target recall of the all-pairs LLM baseline. In online mode (dashed teal), an arriving table $T_{t+1}$ is profiled alone, and the \textbf{Ring Maintainer} looks its columns up in the candidate index, updates the affected rings, and sends only those rings to the verifier. Each business $\mathcal{D}_i$ is processed in isolation.}
     \label{fig:system_arch}
 \end{figure*}
 
@@ -33,15 +41,19 @@ First, \emph{value sketches}: a MinHash sketch of the distinct values for contai
 Second, \emph{statistics}: the uniqueness $u(c)$, the null ratio, the data type, and a value pattern, such as ``three letters, a dash, and five digits''.
 Third, \emph{normalized formats}: the profiler strips leading zeros, prefixes, and case differences, and sketches the normalized values as well, so that a join with zero exact overlap can still show containment.
 Fourth, an \emph{embedding} of the column name together with its LLM annotation, if the annotation step of the current pipeline (Section~\ref{sec:bg_llm}) has already produced one.
+The statistics and the LLM annotation already exist in the production pipeline; the sketches, normalized formats, and embeddings are new.
 The cost of profiling is linear in the size of the data, and no later step reads raw data again.
+In online mode, the profiler runs only on the columns of the arriving table.
 
 \subsection{Ring Builder}
 \label{sec:arch_ringbuilder}
 The Ring Builder turns profiles into rings in four steps, shown in the middle of Figure~\ref{fig:system_arch}.
-First, it selects \emph{key candidates}: columns with uniqueness $u(c) \geq \tau_u$ and few nulls, which can own a key domain.
+First, it selects \emph{key candidates}: columns with uniqueness $u(c) \geq \tau_u$ and few nulls, which can own a key domain, and small column combinations that are unique together, which can own a composite key.
 Second, it generates \emph{candidate references} for every column with two indexes over the key candidates: a containment index on the value sketches~\cite{DBLP:journals/pvldb/ZhuNPM16}, and an approximate nearest-neighbor index on the embeddings.
 The first index finds references with overlapping values, and the second finds references whose values differ in format but whose names and descriptions match.
-Third, it \emph{prunes} candidates that cannot be keys: columns whose type is incompatible with the owner, and generic columns, such as \texttt{DATA} or small status codes, that match a large fraction of all key candidates.
+Third, it \emph{scopes} and \emph{prunes} the candidates.
+The scope is one business, and within it the concept tags of the existing pipeline rank candidates, but they do not restrict them: a reference may cross concepts and source systems, because a customer or project key does.
+Pruning removes candidates that cannot be keys: columns whose type is incompatible with the owner, and generic columns, such as \texttt{DATA} or small status codes, that match a large fraction of all key candidates.
 Fourth, it \emph{forms rings}.
 Each key candidate with at least one remaining reference starts a ring, and each referencing column joins the ring of its best-scoring owner.
 When two owners reference each other, such as a master table and its staging copy, the Ring Builder merges their rings and elects the owner with the larger domain.
@@ -50,18 +62,35 @@ Section~\ref{sec:ring_builder} describes these steps in detail.
 
 \subsection{Budgeted Verifier}
 \label{sec:arch_verifier}
-The Budgeted Verifier turns candidate rings into confirmed rings in four steps, shown on the right of Figure~\ref{fig:system_arch}.
-First, the \emph{cost-based optimizer} draws a random sample of candidates and asks the LLM about them.
-From these answers, it sets two thresholds on the score of the distilled model, so that the result keeps a target recall $\gamma$ of the oracle with probability at least $1-\delta$, in the style of SUPG and BARGAIN~\cite{SUPG,BARGAIN}.
+The Budgeted Verifier turns candidate rings into confirmed rings, as shown on the right of Figure~\ref{fig:system_arch}.
+First, \emph{calibration} draws a random sample of candidates and asks the LLM about them.
+From these answers, the \emph{cost-based optimizer} sets two thresholds on the score of the distilled model, so that the result keeps a target recall $\gamma$ of the oracle with probability at least $1-\delta$, in the style of SUPG and BARGAIN~\cite{SUPG,BARGAIN}.
 It also chooses how many candidates to place in one prompt.
 Second, the \emph{distilled model} scores every remaining candidate from its profile features.
 It accepts candidates above the upper threshold and rejects candidates below the lower threshold.
 Third, the \emph{ring prompt} verifies each ring that still has uncertain members.
 One prompt contains the owner, the accepted members, and the uncertain candidates of a ring, and the LLM confirms the owner and returns the members that refer to it.
-Every LLM answer becomes a label, so the distilled model improves while the verifier runs.
-Fourth, \emph{transitive propagation} derives the remaining joins: every confirmed member joins its owner, and two members of the same ring join through it.
-The output is the join graph $G(\mathcal{R})$ of Section~\ref{sec:problem}.
+Every LLM answer becomes a label, so the distilled model improves while the verifier runs, and it is stored in a \emph{verdict cache} keyed by the owner and the member.
+The cache matters most in online mode: when an arrival changes a ring, the verifier asks the LLM only about members it has no verdict for.
+Fourth, the \emph{SQL join check} of the existing pipeline measures the exact containment of each accepted member in its owner on the warehouse, so that a join accepted from sketches alone is confirmed on the full data.
+Fifth, \emph{transitive propagation} derives the remaining joins: every confirmed member joins its owner, and two members of the same ring join through it.
+The output is the join graph $G(\mathcal{R})$ of Section~\ref{sec:problem}, which the production pipeline stores in a graph database.
+Joins that fail downstream, for example a join that multiplies the rows of a master table, return to the verifier as negative labels.
 Section~\ref{sec:verifier} describes the optimizer and its guarantee.
+
+\subsection{Ring Maintainer}
+\label{sec:arch_maintainer}
+The Ring Maintainer keeps the rings correct as tables arrive.
+For each key-like column of the arriving table, the index lookup returns one of three outcomes.
+First, the column \emph{joins} an existing ring as a member, and the maintainer adds one edge to the ring's owner.
+Second, the column matches no ring but is a key candidate, and it \emph{starts} a new ring that later arrivals can join.
+Third, the column \emph{challenges} the owner of a ring: it is unique, and the current owner and its members are contained in it, as when the true customer master arrives after many tables that reference customers.
+The maintainer then elects the new owner and re-points the edges of that ring, which changes $|M_R|$ edges and no other ring.
+An arrival can also connect two rings, for example a staging copy that overlaps both a master and its older export, and the maintainer merges them.
+When the verifier rejects part of a ring, the maintainer splits it.
+Every change touches only the rings the new columns map to, so the cost of an arrival is independent of the number of tables.
+The verifier treats each changed ring as uncertain and checks it with one ring prompt, together with the uncertain candidates of the new table.
+Section~\ref{sec:online} gives the update rules and shows that the final rings do not depend on the order of arrival.
 
 \begin{example}[Running Example]
 In the services firm of Section~\ref{sec:introduction}, the profiler computes the profile of the project master's \texttt{PROJECT\_CODE}, which is unique, and of the $k$ columns that reference it.
@@ -79,3 +108,7 @@ The LLM then verifies the ring with a single prompt that lists the uncertain mem
 \section{Budgeted Verification}
 \label{sec:verifier}
 \todo{Distilled model, threshold selection with recall guarantee, ring prompts and batching, transitive propagation, cost analysis.}
+
+\section{Online Ring Maintenance}
+\label{sec:online}
+\todo{Arrival algorithm (profile, index lookup, join/start/challenge), owner re-election, ring merge and split, keeping the recall guarantee after every arrival, order independence (bootstrap = one arrival of all tables), cost per arrival.}
