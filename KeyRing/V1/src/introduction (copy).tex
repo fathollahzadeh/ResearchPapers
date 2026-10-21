@@ -1,0 +1,126 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Enterprise data platforms ingest the databases of many business units, ERP systems, and exported files.
+Before analysts, BI tools, or LLM agents can query this data, the platform needs a \emph{join graph}: which tables join, on which key columns, and in which direction.
+Text-to-SQL over large schemas~\cite{Spider2} and automatic BI modeling~\cite{AutoBI} both depend on it.
+However, enterprise databases rarely declare foreign keys.
+Tables arrive as staging copies, snapshots, and exports, and one business can have 50 to 8K tables.
+The join graph must therefore be discovered from the data and its metadata.
+It is also never finished: the platform onboards new source systems and exports, so tables keep arriving, and each new table must be linked to the graph before it can be queried.
+We discover joins within one business; joins across businesses are out of scope.
+
+\introparagraph{Example} Consider a project-based services firm with \todo{2,010} tables.
+A \emph{project code} identifies a project in the project master table, and \todo{k} other tables reference it: ledgers, timesheets, invoices, budgets, and their staging copies and snapshots.
+In some tables the column is called \texttt{PROJECT\_CODE}, in others \texttt{PRJ\_ID} or \texttt{ENGAGEMENT}.
+Staging copies keep only recent projects, and one export pads codes with leading zeros.
+At the same time, dozens of tables have auto-increment surrogate columns that start at 1, status columns with values 1 to 5, and a generic column named \texttt{DATA}.
+A correct join graph links the \todo{k} referencing columns to the project master, and nothing else.
+
+\introparagraph{Non-LLM Join Discovery} The classic approach decides joins from data statistics.
+Inclusion-dependency algorithms find columns whose values are contained in a unique column~\cite{Tschirschnitz17}.
+Learned detectors score such candidates with features such as uniqueness, containment, and name similarity~\cite{Rostin09,ZhangHOPS10,HoPF}, and Auto-BI~\cite{AutoBI} combines a local join classifier with a global graph optimization.
+Joinable-table search treats each column as a \emph{domain}, the set of its distinct values, and finds the columns whose domains overlap most with a query column.
+LSH Ensemble~\cite{DBLP:journals/pvldb/ZhuNPM16} showed that set containment $|Q \cap X|/|Q|$, not Jaccard similarity, is the right overlap measure when domain sizes are skewed, and indexes it with MinHash sketches at the scale of hundreds of millions of domains.
+JOSIE~\cite{DBLP:conf/sigmod/ZhuDNM19}, MATE~\cite{MATE}, DeepJoin~\cite{2023_dong_deepjoin}, and Freyja~\cite{Freyja} extend this search to exact overlap, multi-column keys, embeddings, and learned join quality.
+These methods are cheap and scale to large data lakes.
+However, on the example above they fail in four ways.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Accidental overlap creates false joins.} Every surrogate column with values $1..m$ is contained in every other surrogate column with values $1..n$, $n \geq m$. Status codes, years, and flags overlap in the same way. Value statistics cannot distinguish these overlaps from real references, so the graph fills with false edges. LakeBench~\cite{LakeBench} reports the same failure for joinable-table search: JOSIE returns a column of street names for a query column of last names, because both contain values such as ``Lincoln'' and ``Washington''. In our databases, \todo{P}\% of the inclusion dependencies with containment above 0.9 are not joins.
+\item \textbf{Real joins look imperfect.} Staging copies, deleted rows, and snapshots make containment partial, and formatting differences, such as leading zeros or prefixes, make it zero. A strict containment threshold misses these joins, and a loose one admits more accidental overlaps. No single threshold works across a database.
+\item \textbf{Names do not carry meaning.} The same key appears under different names (\texttt{PRJ\_ID}, \texttt{ENGAGEMENT}), and different keys share generic names (\texttt{ID}, \texttt{CODE}, \texttt{DATA}). String similarity on names cannot resolve either case. The column descriptions and business context that would resolve them are text that these methods do not read.
+\item \textbf{Learned models do not transfer.} Learned detectors and Auto-BI need labeled joins from schemas similar to the target. Every business has its own naming conventions and source systems, and labels are expensive: LakeBench~\cite{LakeBench} spent more than 7,500 human hours to label its join and union queries. Joinable-table search returns a ranked list per query column, not a decision with a key direction.
+\end{itemize}
+
+\introparagraph{LLM-based Join Discovery} LLMs address these failures because they read column names, descriptions, and sample values together, and they bring knowledge of common business entities~\cite{dataWrangleNarayan2022}.
+An LLM can tell that \texttt{ENGAGEMENT} holds project codes and that a surrogate \texttt{ID} does not reference a status table.
+Current practice therefore sends every pair of tables (source and target) to an LLM, which decides whether the pair joins and returns the key.
+This approach is accurate, but its cost grows quadratically with the number of tables.
+A business with $n$ tables needs $n(n-1)/2$ pair evaluations: about 500K for 1K tables and about 32M for 8K tables.
+Each evaluation is itself several LLM calls that carry schemas, descriptions, and sample values, so a single business costs \todo{\$X} in tokens and \todo{Y} hours of inference.
+The cost does not stop after the first build: every new table is evaluated against all $n$ existing tables, and nothing learned from earlier pairs is reused.
+The calls are also mostly wasted: only \todo{Z}\% of the table pairs in our databases join.
+In the example, the LLM is asked about each of the $\binom{k+1}{2}$ pairs among the project tables, although the answers follow from the $k$ references to the project master.
+Independent answers can also contradict each other, and they add a clique of redundant edges to the join graph.
+Redundant edges are not harmless.
+Downstream tools that pick one join path per table pair choose among the equivalent paths arbitrarily, so a new shortcut edge can silently change which tables and keys a query uses, and every extra edge is paid for once when it is discovered and again whenever the graph is placed in a prompt (\todo{measure on production}).
+
+\introparagraph{Hybrid Join Discovery} A natural fix is to combine cheap methods with the LLM.
+Hybrids do so in two ways.
+
+The first way \emph{narrows the search space} before the LLM.
+Schuyler~\cite{Schuyler} clusters the tables of a database into topics with self-supervised LLM embeddings, and notes that such clusters reduce the search for joinable tables to matching within and across groups.
+Our production pipeline follows the same idea: an LLM tags each table and groups related tables into concepts before it searches for joins.
+Magneto~\cite{Magneto} uses a small model to retrieve candidate column matches for an LLM.
+However, topics are not key domains.
+A customer or project key crosses topic boundaries, so restricting the search to a cluster loses joins, and searching across clusters brings back the quadratic number of pairs.
+
+The second way \emph{routes each pair} to a cheap proxy or to the LLM.
+Semantic join operators in LOTUS~\cite{LOTUS} and Palimpzest~\cite{Palimpzest}, and model cascades~\cite{FrugalGPT}, accept or reject a pair by its embedding similarity and defer inconclusive pairs to the LLM.
+SUPG~\cite{SUPG} and BARGAIN~\cite{BARGAIN} set the deferral thresholds so that the result keeps a target precision or recall of the LLM with statistical guarantees.
+Such cascades save little when embeddings do not encode the join condition: on real data, BARGAIN still defers about 80\% of pairs to the LLM~\cite{FDJ}.
+Featurized-Decomposition Join (FDJ)~\cite{FDJ} reduces the cost by up to $10\times$ with a key idea: extract features from each record with a linear pass of the LLM, and decide the join with cheap comparisons on those features.
+
+These hybrids lower the cost per pair, but they inherit two problems.
+First, a cheap filter or proxy inherits the failures of non-LLM methods: a surrogate overlap passes it and costs an LLM call, and a real join with zero containment is dropped before the LLM sees it.
+Second, they evaluate a given join predicate over record pairs of two given tables.
+Join discovery asks a different question: which of thousands of tables join, and on which of their columns.
+Applied to table or column pairs, these operators judge every pair independently.
+They do not use what makes join keys special: one side is unique, the other side references it, and many tables share one key domain.
+The number of LLM calls still grows with the number of candidate pairs.
+
+\input{tables/table1_positioning}
+
+\introparagraph{Problem and Challenges} Given a database without declared keys and an LLM, we aim to discover its join keys with as few LLM calls as possible, while keeping a target recall of the all-pairs LLM baseline.
+Table~\ref{tab:intro-landscape} compares one representative per category against this goal.
+Because tables keep arriving, the system must also link each new table at a cost that does not grow with the size of the business.
+Meeting these goals is hard for four reasons.
+First, the candidate space is quadratic and almost all of it is empty, so pruning must remove nearly all pairs before any LLM call, yet every true join it drops is lost silently.
+Second, the cheap signals that pruning relies on are exactly the ones that fail in non-LLM methods.
+Third, pairwise decisions ignore the structure of key domains, so they are redundant and can be inconsistent.
+Fourth, an online system sees the tables in an arbitrary order.
+A table that arrives late may be the true owner of a key that many earlier tables reference, so earlier decisions must be revised, and the result should not depend on the order of arrival.
+
+\introparagraph{Our Insight} Enterprise joins are not spread evenly over table pairs.
+They concentrate on a small number of \emph{key domains}, such as customer, project, employee, or invoice identifiers.
+Each key domain has one \emph{owner} column that is unique, and many \emph{member} columns that reference it.
+If we know the key domains, we know the joins: every member joins with its owner.
+The number of key domains is orders of magnitude smaller than the number of table pairs.
+So the LLM should verify key domains, not pairs.
+This lifts FDJ's insight from records to schemas: work that is linear in the number of columns (profiling, annotation, and grouping columns into key domains) replaces work that is quadratic in the number of tables.
+It also extends the value domains of LSH Ensemble with meaning and ownership: a key domain is a set of columns that refer to the same business entity, with one owner.
+Finally, it splits the work between the two kinds of methods along their strengths.
+Non-LLM signals are reliable for uniqueness and for proposing candidates with high recall, but not for deciding meaning.
+The LLM is reliable for meaning, but too expensive to apply to every pair.
+
+\introparagraph{System Overview} This paper presents \ourmethod\footnote{\ourmethod holds all columns of one key domain together, like keys on a ring. The code is available to reviewers at \url{https://anonymous.4open.science/r/KeyRing}.}, a hybrid system that discovers join keys with LLM calls proportional to the number of key domains.
+\ourmethod has three core components.
+First, the \emph{Column Profiler} reads the data once and computes sketches of each column's values, its uniqueness, type, value pattern, and normalized formats, and an embedding of its name and description.
+No later step reads raw data.
+Second, the \emph{Ring Builder} generates candidates with containment and embedding indexes, tuned for recall rather than precision.
+It prunes generic and type-incompatible columns, and groups the remaining columns into \emph{rings}, one per candidate key domain, each with an elected owner.
+Third, the \emph{Budgeted Verifier} decides which rings and candidates need the LLM.
+A local model, distilled from \ourmethod's own earlier LLM decisions rather than from labeled schemas, accepts or rejects confident candidates.
+The LLM verifies each ring once, in a batched prompt with its owner, its members, and its uncertain candidates, and removes accidental members such as surrogate overlaps.
+A cost-based optimizer chooses thresholds and batches so that \ourmethod keeps a target recall $\gamma$ of the all-pairs LLM baseline with probability at least $1-\delta$.
+Confirmed rings propagate joins by transitivity without further LLM calls.
+The output join graph is a star around each owner, not a clique of redundant edges.
+
+\ourmethod runs in two modes over the same state: profiles, indexes, rings, and the distilled model.
+In \emph{bootstrap} mode, it builds the rings of a business from all its tables.
+In \emph{online} mode, it links one arriving table: it profiles only the new columns, looks them up in the existing indexes, and assigns each key-like column to a ring or starts a new one.
+A fourth component, the \emph{Ring Maintainer}, revises the affected rings when an arrival changes them: it elects a better owner, merges two rings that the new table connects, or splits a ring that verification shows to mix two domains.
+The Budgeted Verifier then checks only the affected rings.
+Each change updates the edges of one ring, so the cost of an arrival grows with the size of the new table and of the rings it touches, not with the number of tables.
+Bootstrap is the special case in which all tables arrive at once, and we show that the final rings do not depend on the order of arrival.
+
+\introparagraph{Contributions} Our primary contribution is \ourmethod, a holistic and practical hybrid system for join key discovery over thousands of tables that is more accurate than non-LLM methods and whose LLM cost grows with the number of key domains, not with the number of table pairs.
+Our detailed technical contributions are:
+\begin{itemize}[leftmargin=*]
+\item An analysis of why non-LLM, LLM-based, and hybrid join discovery fail on enterprise databases, a formalization of cost-bounded join key discovery with a recall target relative to an LLM oracle, and a system architecture that solves it by discovering key domains instead of judging table pairs (Sections~\ref{sec:background} and~\ref{sec:architecture}).
+\item A ring builder that turns one pass of column profiling into candidate rings with elected owners, using containment and embedding indexes and format normalization, and that prunes generic columns that match too many owners, without LLM calls (Section~\ref{sec:ring_builder}).
+\item A budgeted verifier that routes each candidate to a distilled local model or to one batched LLM prompt per ring, and a cost-based optimizer whose thresholds keep a target recall of the all-pairs LLM baseline with a given confidence, accounting for the correlated errors of verdicts that decide a whole ring (Section~\ref{sec:verifier}).
+\item A ring maintainer for the online setting that computes the minimal set of rings an arriving table affects, re-verifies only those rings, and re-elects owners or merges and splits rings, so that the cost of an arrival depends on the new table and the rings it touches rather than on the number of tables, and the result does not depend on the order of arrival (Section~\ref{sec:online}).
+\item A comprehensive evaluation on \todo{N} production enterprise databases with up to \todo{8K} tables and on public benchmarks, against non-LLM methods (inclusion-dependency discovery, Auto-BI, joinable-table search), all-pairs LLM prompting, and hybrid methods (Section~\ref{sec:experiments}). \ourmethod improves join F1 over the best non-LLM method by \todo{P} points, and reduces LLM calls by \todo{X}$\times$, tokens by \todo{Y}$\times$, and end-to-end time by \todo{W}$\times$ compared to all-pairs prompting, while keeping \todo{Z}\% of its joins, and reaches \todo{Q}\% precision on human-labeled joins.
+Replaying the tables of each business in their creation order, \ourmethod links each arriving table with \todo{V}$\times$ fewer LLM calls than pairwise prompting and ends with the same graph as a bootstrap run.
+\end{itemize}

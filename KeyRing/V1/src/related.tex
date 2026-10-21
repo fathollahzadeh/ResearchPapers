@@ -111,7 +111,7 @@ FDJ shows that linear per-record extraction can replace quadratic per-pair decis
 \subsection{Profiling Metadata for LLMs}
 \label{sec:bg_metadata}
 All methods above consume column profiles, and LLM-based methods must also fit a description of each column into a prompt.
-We review how dependencies are discovered and stored, how LLMs annotate columns, and how metadata is selected for a prompt.
+We review how dependencies are discovered and stored, how unified data layers depend on keys, how LLMs annotate columns, and how metadata is selected for a prompt.
 
 \introparagraph{Dependency Discovery and Profile Stores} Data profiling computes metadata such as unique column combinations (UCCs), functional dependencies (FDs), and INDs~\cite{ProfilingSurvey}.
 Metanome~\cite{Metanome} bundles discovery algorithms for these dependencies.
@@ -122,6 +122,15 @@ FAIDA~\cite{FAIDA} tests IND candidates on HyperLogLog sketches and samples, and
 DynFD~\cite{DynFD} maintains FDs as the data changes, instead of discovering them again.
 Metacrate~\cite{Metacrate} stores them as a queryable database of data profiles.
 Wan and Han~\cite{ValueDriven} argue that a valid dependency is not always a useful one: discovery should target the dependencies whose value for a downstream task exceeds the cost to discover and maintain them.
+
+\introparagraph{Unified Data Layers} Systems that integrate many sources consume the keys that \ourmethod discovers.
+OmniTable~\cite{OmniTable} presents more than 35\,PB of LLM training data, spread over hundreds of physical tables, as one logical wide table.
+A catalog maps logical columns to physical tables, and all sources, processing stages, and derived features are aligned on a global primary key.
+The system generates this key when a record is ingested.
+The design therefore assumes the alignment key, while enterprise databases do not provide one.
+A layer of this kind first needs the key domains and their owners, which are the output of \ourmethod.
+OmniTable also recomputes incrementally: a new batch or a new feature triggers only the minimum closure of its uncomputed dependencies, and the catalog records the status and lineage of every result.
+The online mode of \ourmethod (Section~\ref{sec:online}) applies the same principle to join discovery: an arriving table triggers verification of only the rings it affects, and the verdict cache keeps every answer the LLM has given.
 
 \introparagraph{LLM-based Profiling and Annotation} LLMs annotate columns with semantic types without task-specific training~\cite{DBLP:conf/vldb/KoriniB23,ArcheType}, and write column descriptions for catalogs and downstream tasks~\cite{TACO}.
 Dependencies can also come from the LLM, not the data: LLMClean~\cite{LLMClean} lets an LLM derive ontological FDs from a table and uses them to detect errors.
