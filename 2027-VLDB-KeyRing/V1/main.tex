@@ -1,0 +1,53 @@
+\documentclass[sigconf, screen, nonacm, pdfa]{acmart}
+\usepackage{pvldb}
+\input{datalabmacros}   % lab template macros (Data_Intelligence_Template)
+%\input{keyring_macros}  % paper-specific macros
+
+
+%% The following must be set for each paper (values below are placeholders).
+%% Everything else (volume/issue/year defaults, the PVLDB Reference Format
+%% block, license footer, and Artifact Availability block) is handled by
+%% pvldb.sty -- see that file if you need to change shared defaults.
+\renewcommand\vldbdoi{XX.XX/XXX.XX}
+\renewcommand\vldbpages{XXX-XXX}
+% leave empty if no availability url should be set
+\renewcommand\vldbavailabilityurl{URL_TO_YOUR_ARTIFACTS} 
+
+\begin{document}
+\title[\ourmethod: Scalable Join Discovery with LLMs and Recall Guarantees]{\ourmethod: Scalable Join Discovery with LLMs\\ and Recall Guarantees}
+
+\author{Saeed Fatholahzadeh}
+\affiliation{%
+  \institution{University of Waterloo}
+  \city{Waterloo}
+  %\state{ON}
+  \country{Canada}
+}
+\email{saeed.fathollahzadeh@uwaterloo.ca}
+
+\author{Ren\'ee J. Miller}
+%\orcid{0000-0002-1825-0097}
+\affiliation{%
+  \institution{University of Waterlo}
+  \city{Waterloo}
+  \country{Canada}
+}
+\email{rjmiller@uwaterloo.ca}
+
+\input{src/abstract}
+
+\maketitle
+\vldbtopmatter
+
+\input{src/introduction}
+\input{src/related}
+\input{src/methodology}
+\input{src/experiment}
+\input{src/conclusion}
+
+\balance
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{bib/topic-datalake,bib/topic-modellake,bib/topic-others,bib/topic-ourgroup,bib/topic-llm,bib/topic-scitable,bib/topic-keyring}
+
+
+\end{document}

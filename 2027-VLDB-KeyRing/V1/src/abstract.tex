@@ -1,0 +1,32 @@
+%\begin{abstract}
+% 1. State the problem
+%Enterprise analytics, BI, and LLM agents depend on a join graph that identifies joinable tables, key columns, and reference directions. Discovering this graph is challenging: enterprise databases contain thousands of tables, rarely declare foreign keys, and continually acquire new tables. 
+% 2. Say why it's an interesting problem
+%Statistical methods can mistake accidental value overlap for joins or miss keys with different names and formats. LLM-based methods can resolve these ambiguities, but verifying table pairs independently is expensive, can produce inconsistent and redundant edges, and repeats work as tables arrive. Dense graphs can also expose downstream queries to unnecessary join paths and intermediate results.
+% 3. Say what your solution achieves
+%We present \ourmethod, which discovers joins by selecting candidate \emph{key domains} instead of candidate table pairs. Each domain comprises an owner column and the columns that reference it. \ourmethod’s candidate-selection algorithm combines value containment and column semantics to identify plausible domains, elect owners, and group references, while filtering generic columns that would otherwise match unrelated keys. An LLM verifies each candidate domain rather than each constituent pair. This reduces verification calls and produces a compact, owner-centered graph that preserves the joins confirmed by verification without adding redundant pairwise edges. The resulting graph provides downstream query processing with explicit key directions and fewer alternative join paths.
+% 4. Say what follows from your solution
+%On \todo{N} enterprise databases and public benchmarks, \ourmethod reduces LLM calls by \todo{X}$\times$ and tokens by \todo{Y}$\times$ relative to blocked pairwise verification while retaining \todo{Z}\% of its joins. It improves F1 over the strongest non-LLM baseline by \todo{P} points and achieves \todo{Q}\% precision on human-labeled joins. In online evaluation, it links arriving tables with \todo{V}$\times$ fewer LLM calls than pairwise verification. \todo{If measured: For downstream queries, the resulting graph reduces intermediate results by \todo{R}\% and query execution time by \todo{S}\%, without changing query results.}
+%\end{abstract}
+
+\begin{abstract}
+% 1. State the problem
+Enterprise analytics, BI tools, and LLM agents rely on a join graph that identifies joinable tables, key columns, and reference directions. Discovering this graph is hard: enterprise databases contain thousands of tables, rarely declare foreign keys, and continually ingest new tables.
+% 2. Say why it's an interesting problem
+A useful join graph must be accurate despite ambiguous value overlaps and inconsistent names, affordable when an LLM is involved, free of redundant edges, and kept up to date as tables arrive.
+% 3. Say what your solution achieves
+We present \ourmethod, which discovers joins per \emph{key domain}: an owner column and the columns that reference it.
+% 3a. Selecting key candidates (owners)
+Owner candidates are columns that are near-unique and non-null, alone or as small composite keys \todo{owner selection and election algorithm}.
+% 3b. Selecting references
+For each owner, references are retrieved with a containment index over value sketches, including normalized formats, and a semantic index over column names and descriptions, after pruning columns that cannot be keys: measures, dates, flags, free text, type-incompatible columns, and generic columns that match too many owners.
+% 3c. Where the LLM is called
+A local model distilled from earlier LLM answers decides confident references, and the LLM sees only the uncertain ones, in one prompt per domain: it judges each reference with the context of the whole domain, and the number of calls grows with the number of domains rather than candidate pairs.
+% 3d. Guarantees: correctness (sparse graph) and use by applications
+With a given confidence, the graph keeps a target recall and precision relative to an all-pairs LLM oracle, so it misses few true joins and adds few false ones \todo{precision part of the guarantee}. Each reference keeps a single edge to its owner, so applications see fewer alternative join paths and smaller intermediate results \todo{application-level redundancy guarantee}.
+% 3e. Strong points
+\ourmethod needs no labeled joins, names the owner and direction of every join, scales to tens of thousands of columns without enumerating column pairs, and links each arriving table by re-verifying only the domains it touches.
+% 4. Say what follows from your solution
+On \todo{N} enterprise databases and public benchmarks, \ourmethod reduces LLM calls by \todo{X}$\times$ relative to blocked pairwise verification, keeps \todo{Z}\% of its joins, and reaches \todo{Q}\% precision on human-labeled joins.
+\end{abstract}
+
